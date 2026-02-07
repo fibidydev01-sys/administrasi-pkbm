@@ -8,18 +8,21 @@ import { toast } from "sonner";
 import { ArrowLeft, Pencil, Trash2, Printer, CheckCircle } from "lucide-react";
 
 import { useSurat, usePermissions } from "@/hooks";
-import { ROUTES } from "@/constants";
+import { ROUTES, PAPER_SIZE, DEFAULT_PAPER_SIZE } from "@/constants";
+import type { PaperSize } from "@/constants";
 import { formatTanggalPendek } from "@/lib/date";
 
 import { PageHeader, StatusBadge, DeleteConfirmDialog, FullPageLoader } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import SuratPreview from "@/components/features/surat/surat-preview";
 
 export default function SuratDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
   const [showDelete, setShowDelete] = useState(false);
+  const [paperSize, setPaperSize] = useState<PaperSize>(DEFAULT_PAPER_SIZE);
 
   const { surat, loading, error, deleteSurat, updateSurat } = useSurat(id);
   const { can } = usePermissions();
@@ -80,6 +83,18 @@ export default function SuratDetailPage({ params }: { params: Promise<{ id: stri
               </Button>
             </Link>
           )}
+          <Select value={paperSize} onValueChange={(v) => setPaperSize(v as PaperSize)}>
+            <SelectTrigger className="w-[140px] no-print">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(Object.keys(PAPER_SIZE) as PaperSize[]).map((key) => (
+                <SelectItem key={key} value={key}>
+                  {PAPER_SIZE[key].label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button variant="outline" onClick={() => window.print()}>
             <Printer className="h-4 w-4 mr-2" />
             Cetak
@@ -122,7 +137,7 @@ export default function SuratDetailPage({ params }: { params: Promise<{ id: stri
 
       {/* Preview */}
       <div className="print:m-0">
-        <SuratPreview surat={surat} />
+        <SuratPreview surat={surat} paperSize={paperSize} />
       </div>
 
       <DeleteConfirmDialog
