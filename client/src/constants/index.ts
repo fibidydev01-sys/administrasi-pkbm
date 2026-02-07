@@ -6,3 +6,12 @@ export {
   SURAT_STATUS_COLORS,
   LEMBAGA_VARIANT_MAP,
 } from "./surat-config";
+export {
+  PAPER_SIZE,
+  MARGIN,
+  SURAT_TYPOGRAPHY,
+  KOP_CONFIG,
+  SIGNATURE_CONFIG,
+  DEFAULT_PAPER_SIZE,
+} from "./paper-config";
+export type { PaperSize } from "./paper-config";

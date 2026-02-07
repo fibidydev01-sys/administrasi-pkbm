@@ -206,10 +206,19 @@
 }
 
 /* =============================================
-   SURAT PRINT STYLES (A4 Format)
+   SURAT TEMPLATE STYLES
+   Standar: Peraturan ANRI No. 5 Tahun 2021
    ============================================= */
 
-/* Screen surat styles */
+/* Preview container — screen styles */
+.surat-preview {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 12pt;
+  line-height: 1.5;
+  color: #000;
+}
+
+/* Backward compat: .surat-container & .a4-page */
 .surat-container {
   font-family: "Times New Roman", Times, serif;
   font-size: 12pt;
@@ -220,36 +229,56 @@
 .a4-page {
   width: 210mm;
   min-height: 297mm;
-  padding: 25mm 20mm 20mm 25mm;
+  padding: 20mm 20mm 25mm 30mm;
   margin: 0 auto;
   background: white;
 }
 
-/* Kop surat styles */
-.kop-surat h1 {
+/* Kop surat */
+.kop-surat h1,
+.kop-surat h2 {
   letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
-/* Surat body text justify */
+/* Garis pemisah kop */
+.kop-divider {
+  border: none;
+  border-top: 2pt solid #000;
+  margin-top: 3mm;
+  margin-bottom: 8mm;
+}
+
+/* Paragraph indent standar 1.25cm */
 .surat-body {
   text-align: justify;
-  text-indent: 2em;
 }
 
-.surat-body p {
-  text-indent: 0;
+.surat-body p,
+.surat-content p {
+  text-indent: 1.25cm;
+  margin-bottom: 0;
 }
 
-.surat-body .text-justify {
-  text-indent: 2em;
+.surat-content p + p {
+  margin-top: 0.5em;
 }
 
-/* Print media */
+/* Signature block */
+.signature-block {
+  page-break-inside: avoid;
+}
+
+/* =============================================
+   PRINT STYLES
+   ============================================= */
+
 @media print {
   /* Hide all UI elements */
   header,
   nav,
   aside,
+  footer,
   .sidebar,
   .mobile-nav,
   .no-print,
@@ -265,16 +294,37 @@
     padding: 0 !important;
   }
 
-  /* A4 page setup */
+  /* A4 default */
   @page {
-    size: A4;
+    size: A4 portrait;
     margin: 0;
+  }
+
+  /* F4 override */
+  .surat-preview[data-paper-size="F4"] {
+    min-height: 330mm;
+  }
+
+  @page f4 {
+    size: 210mm 330mm;
+    margin: 0;
+  }
+
+  .surat-preview[data-paper-size="F4"] {
+    page: f4;
+  }
+
+  /* Container print */
+  .surat-preview {
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .surat-container {
     width: 210mm;
     min-height: 297mm;
-    padding: 25mm 20mm 20mm 25mm;
+    padding: 20mm 20mm 25mm 30mm;
     margin: 0;
     background: white;
     font-size: 12pt;
@@ -288,6 +338,11 @@
     box-shadow: none !important;
   }
 
+  /* Kop border harus print */
+  .kop-divider {
+    border-top: 2pt solid #000 !important;
+  }
+
   /* Ensure kop surat borders print correctly */
   .kop-surat [class*="border-t"] {
     border-color: #000 !important;
@@ -295,7 +350,7 @@
     print-color-adjust: exact;
   }
 
-  /* Prevent page breaks inside elements */
+  /* Page break rules */
   .signature-block,
   .tembusan-list,
   .surat-meta {
