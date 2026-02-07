@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
-import { ArrowLeft, Pencil, Trash2, Printer, CheckCircle } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, CheckCircle } from "lucide-react";
 
 import { useSurat, usePermissions } from "@/hooks";
 import { ROUTES, PAPER_SIZE, DEFAULT_PAPER_SIZE } from "@/constants";
@@ -17,10 +17,9 @@ import { PageHeader, StatusBadge, DeleteConfirmDialog, FullPageLoader } from "@/
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import SuratPreview from "@/components/features/surat/surat-preview";
 
-const PDFDownloadButton = dynamic(
-  () => import("@/components/features/surat/pdf/pdf-download-button"),
+const PDFPreviewModal = dynamic(
+  () => import("@/components/features/surat/pdf/pdf-preview-modal"),
   { ssr: false }
 );
 
@@ -90,7 +89,7 @@ export default function SuratDetailPage({ params }: { params: Promise<{ id: stri
             </Link>
           )}
           <Select value={paperSize} onValueChange={(v) => setPaperSize(v as PaperSize)}>
-            <SelectTrigger className="w-[140px] no-print">
+            <SelectTrigger className="w-[140px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -101,11 +100,7 @@ export default function SuratDetailPage({ params }: { params: Promise<{ id: stri
               ))}
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={() => window.print()}>
-            <Printer className="h-4 w-4 mr-2" />
-            Cetak
-          </Button>
-          <PDFDownloadButton surat={surat} paperSize={paperSize} />
+          <PDFPreviewModal surat={surat} paperSize={paperSize} />
           {can.deleteSurat && surat.status === "draft" && (
             <Button variant="destructive" onClick={() => setShowDelete(true)}>
               <Trash2 className="h-4 w-4 mr-2" />
@@ -116,7 +111,7 @@ export default function SuratDetailPage({ params }: { params: Promise<{ id: stri
       </PageHeader>
 
       {/* Info Card */}
-      <Card className="no-print">
+      <Card>
         <CardHeader>
           <CardTitle className="text-base">Informasi Surat</CardTitle>
         </CardHeader>
@@ -141,11 +136,6 @@ export default function SuratDetailPage({ params }: { params: Promise<{ id: stri
           </div>
         </CardContent>
       </Card>
-
-      {/* Preview */}
-      <div className="print:m-0">
-        <SuratPreview surat={surat} paperSize={paperSize} />
-      </div>
 
       <DeleteConfirmDialog
         open={showDelete}
