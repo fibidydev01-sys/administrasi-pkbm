@@ -25,9 +25,45 @@ export const suratSchema = z.object({
   sifat: z.enum(["Biasa", "Penting", "Segera", "Rahasia"]).default("Biasa"),
   tanggal_surat: z.string().optional(),
   tembusan: z.array(z.string().min(1, "Nama penerima tembusan wajib diisi")).optional().default([]),
+  template_id: z.string().optional().or(z.literal("")),
+  template_data: z.record(z.string(), z.string()).optional(),
 });
 
 export type SuratFormData = z.infer<typeof suratSchema>;
+
+// =============================================
+// Template Validators
+// =============================================
+
+export const bodyPartSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("text"), value: z.string().min(1, "Teks wajib diisi") }),
+  z.object({ type: z.literal("field_group"), section: z.string().min(1, "Section wajib diisi") }),
+]);
+
+export const templateFieldSchema = z.object({
+  nama_field: z.string().min(1, "Nama field wajib diisi").max(100),
+  label: z.string().min(1, "Label wajib diisi").max(200),
+  tipe: z.enum(["text", "textarea", "date", "number", "select"]).default("text"),
+  urutan: z.number().int().min(0).default(0),
+  required: z.boolean().default(false),
+  placeholder: z.string().max(300).optional().or(z.literal("")),
+  default_value: z.string().max(500).optional().or(z.literal("")),
+  options: z.array(z.string()).optional(),
+  section: z.string().min(1, "Section wajib diisi").max(100),
+});
+
+export const templateSchema = z.object({
+  nama: z.string().min(1, "Nama template wajib diisi").max(200),
+  kategori: z.string().min(1, "Kategori wajib diisi").max(100),
+  perihal_default: z.string().max(500).optional().or(z.literal("")),
+  body_parts: z.array(bodyPartSchema).min(1, "Minimal 1 bagian body"),
+  lembaga_id: z.string().optional().or(z.literal("")),
+  is_active: z.boolean().default(true),
+  fields: z.array(templateFieldSchema).optional().default([]),
+});
+
+export type TemplateFormData = z.infer<typeof templateSchema>;
+export type TemplateFieldFormData = z.infer<typeof templateFieldSchema>;
 
 // =============================================
 // Lembaga Validators

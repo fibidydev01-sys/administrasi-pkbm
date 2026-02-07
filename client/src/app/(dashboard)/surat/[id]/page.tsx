@@ -133,6 +133,12 @@ export default function SuratDetailPage({ params }: { params: Promise<{ id: stri
               <p className="text-muted-foreground">Sifat</p>
               <p className="font-medium">{surat.sifat}</p>
             </div>
+            {surat.template && (
+              <div>
+                <p className="text-muted-foreground">Template</p>
+                <p className="font-medium">{surat.template.nama}</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

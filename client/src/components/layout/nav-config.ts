@@ -5,6 +5,7 @@ import {
   Users,
   Settings,
   BarChart3,
+  FileStack,
   type LucideIcon,
 } from "lucide-react";
 
@@ -57,6 +58,12 @@ export const adminNavItems: NavItem[] = [
 ];
 
 export const adminManageItems: NavItem[] = [
+  {
+    title: "Template Surat",
+    href: "/admin/template",
+    icon: FileStack,
+    adminOnly: true,
+  },
   {
     title: "Lembaga",
     href: "/admin/lembaga",

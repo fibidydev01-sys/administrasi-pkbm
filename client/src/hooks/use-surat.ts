@@ -24,6 +24,7 @@ export function useSurat(suratId?: string) {
           *,
           lembaga(*),
           tembusan:surat_tembusan(*),
+          template:surat_templates(*, fields:surat_template_fields(*)),
           created_by_profile:user_profiles!created_by(full_name, role)
         `
         )
