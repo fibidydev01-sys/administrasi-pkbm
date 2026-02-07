@@ -4,10 +4,10 @@ import { createContext, useContext, useEffect, useRef, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores";
 import { createClient } from "@/lib/supabase/client";
-import type { Guru } from "@/types";
+import type { UserProfile } from "@/types";
 
 interface AuthContextType {
-  guru: Guru | null;
+  user: UserProfile | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
@@ -21,23 +21,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const authListenerSetup = useRef(false);
 
-  const guru = useAuthStore((state) => state.guru);
+  const user = useAuthStore((state) => state.user);
   const isLoading = useAuthStore((state) => state.isLoading);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isAdmin = useAuthStore((state) => state.isAdmin);
   const hasFetched = useAuthStore((state) => state.hasFetched);
-  const fetchGuru = useAuthStore((state) => state.fetchGuru);
+  const fetchUser = useAuthStore((state) => state.fetchUser);
   const storeLogout = useAuthStore((state) => state.logout);
   const reset = useAuthStore((state) => state.reset);
 
-  // Fetch on mount - only once
   useEffect(() => {
     if (!hasFetched && !isLoading) {
-      fetchGuru();
+      fetchUser();
     }
   }, []);
 
-  // Single auth listener
   useEffect(() => {
     if (authListenerSetup.current) return;
     authListenerSetup.current = true;
@@ -52,8 +50,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         router.push("/login");
       } else if (event === "SIGNED_IN" && session) {
         const state = useAuthStore.getState();
-        if (!state.guru) {
-          fetchGuru();
+        if (!state.user) {
+          fetchUser();
         }
       }
     });
@@ -62,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription.unsubscribe();
       authListenerSetup.current = false;
     };
-  }, [router, reset, fetchGuru]);
+  }, [router, reset, fetchUser]);
 
   const logout = async () => {
     await storeLogout();
@@ -71,13 +69,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refetch = async () => {
     useAuthStore.setState({ hasFetched: false, isLoading: false, fetchPromise: null });
-    await fetchGuru();
+    await fetchUser();
   };
 
   return (
     <AuthContext.Provider
       value={{
-        guru,
+        user,
         isLoading,
         isAuthenticated,
         isAdmin,
@@ -93,8 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
 
-  // Fallback to store if not in provider (for backward compatibility)
-  const storeGuru = useAuthStore((state) => state.guru);
+  const storeUser = useAuthStore((state) => state.user);
   const storeIsLoading = useAuthStore((state) => state.isLoading);
   const storeIsAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const storeIsAdmin = useAuthStore((state) => state.isAdmin);
@@ -103,13 +100,12 @@ export function useAuth() {
     return context;
   }
 
-  // Fallback
   return {
-    guru: storeGuru,
+    user: storeUser,
     isLoading: storeIsLoading,
     isAuthenticated: storeIsAuthenticated,
     isAdmin: storeIsAdmin,
-    logout: async () => { },
-    refetch: async () => { },
+    logout: async () => {},
+    refetch: async () => {},
   };
 }

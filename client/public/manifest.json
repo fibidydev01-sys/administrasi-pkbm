@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Absensi Yayasan Al Barakah",
-  "short_name": "Absensi Yayasan",
-  "description": "Sistem Absensi Digital Yayasan Al Barakah - Madiun",
+  "name": "Administrasi PKBM - Yayasan Al Barakah",
+  "short_name": "Administrasi PKBM",
+  "description": "Sistem Persuratan & Administrasi PKBM Yayasan Al Barakah",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -52,10 +52,10 @@
   ],
   "shortcuts": [
     {
-      "name": "Absen Masuk",
-      "short_name": "Absen",
-      "description": "Langsung ke halaman absensi",
-      "url": "/absen",
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Buka dashboard administrasi",
+      "url": "/dashboard",
       "icons": [
         {
           "src": "/icon/icon-96x96.png",
@@ -65,10 +65,10 @@
       ]
     },
     {
-      "name": "Riwayat",
-      "short_name": "Riwayat",
-      "description": "Lihat riwayat absensi",
-      "url": "/riwayat",
+      "name": "Surat",
+      "short_name": "Surat",
+      "description": "Kelola surat keluar",
+      "url": "/surat",
       "icons": [
         {
           "src": "/icon/icon-96x96.png",

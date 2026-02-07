@@ -21,6 +21,7 @@ import { Loader2, LogIn, AlertCircle, Eye, EyeOff, Mail, Lock, HelpCircle } from
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores";
 import { loginSchema, type LoginFormData } from "@/lib/validators";
+import { isAdminRole } from "@/types";
 
 export function LoginForm() {
   const router = useRouter();
@@ -65,30 +66,23 @@ export function LoginForm() {
         return;
       }
 
-      // Check if user is linked to guru
-      const { data: guru, error: guruError } = await supabase
-        .from("guru")
-        .select("id, is_admin, is_active, is_verified")
-        .eq("auth_user_id", authData.user.id)
+      // Check if user has a profile
+      const { data: profile, error: profileError } = await supabase
+        .from("user_profiles")
+        .select("id, role, is_active")
+        .eq("id", authData.user.id)
         .single();
 
-      if (guruError || !guru) {
+      if (profileError || !profile) {
         await supabase.auth.signOut();
-        setError("Akun tidak terhubung dengan data guru. Hubungi administrator.");
+        setError("Akun tidak terdaftar dalam sistem. Hubungi administrator.");
         setIsLoading(false);
         return;
       }
 
-      if (!guru.is_active) {
+      if (!profile.is_active) {
         await supabase.auth.signOut();
         setError("Akun Anda telah dinonaktifkan. Hubungi administrator.");
-        setIsLoading(false);
-        return;
-      }
-
-      if (!guru.is_verified) {
-        await supabase.auth.signOut();
-        setError("Akun Anda belum diverifikasi. Hubungi administrator.");
         setIsLoading(false);
         return;
       }
@@ -100,17 +94,10 @@ export function LoginForm() {
         fetchPromise: null,
       });
 
-      // Small delay to ensure state is reset before navigation
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Redirect based on role
-      if (guru.is_admin) {
-        router.push("/admin/dashboard");
-      } else {
-        router.push("/absen");
-      }
-
-      // Force refresh to ensure new page loads with fresh state
+      // Redirect to dashboard (same for all roles)
+      router.push("/dashboard");
       router.refresh();
 
     } catch (err) {
@@ -123,7 +110,6 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md shadow-lg">
       <CardHeader className="text-center space-y-4 pb-4">
-        {/* Logo */}
         <div className="flex justify-center">
           <div className="relative w-24 h-24">
             <Image
@@ -136,11 +122,10 @@ export function LoginForm() {
           </div>
         </div>
 
-        {/* Title */}
         <div>
           <CardTitle className="text-2xl font-bold">Yayasan Al Barakah</CardTitle>
           <CardDescription className="text-base mt-1">
-            Sistem Absensi Digital
+            Sistem Persuratan & Administrasi PKBM
           </CardDescription>
         </div>
       </CardHeader>
@@ -148,7 +133,6 @@ export function LoginForm() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Error Alert */}
             {error && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
@@ -156,7 +140,6 @@ export function LoginForm() {
               </Alert>
             )}
 
-            {/* Email Field */}
             <FormField
               control={form.control}
               name="email"
@@ -181,7 +164,6 @@ export function LoginForm() {
               )}
             />
 
-            {/* Password Field */}
             <FormField
               control={form.control}
               name="password"
@@ -219,7 +201,6 @@ export function LoginForm() {
               )}
             />
 
-            {/* Submit Button */}
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
                 <>
@@ -234,7 +215,6 @@ export function LoginForm() {
               )}
             </Button>
 
-            {/* Forgot Password */}
             <div className="flex items-center justify-center gap-2 pt-2 text-sm text-muted-foreground">
               <HelpCircle className="h-4 w-4" />
               <p>

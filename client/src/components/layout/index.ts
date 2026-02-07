@@ -5,11 +5,11 @@
 
 export { Header } from "./header";
 export { AppSidebar } from "./app-sidebar";
-export { MobileBottomNav, MobileModeSwitcher } from "./mobile-nav";
+export { MobileBottomNav } from "./mobile-nav";
 export {
   getNavItems,
   getAllNavItems,
-  userNavItems,
+  staffNavItems,
   adminNavItems,
   type NavItem,
   type NavSection,

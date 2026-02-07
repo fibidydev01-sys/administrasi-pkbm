@@ -33,35 +33,3 @@ export function AvatarDisplay({
     </Avatar>
   );
 }
-
-interface GuruAvatarProps {
-  nama: string;
-  fotoUrl?: string | null;
-  jabatan?: string | null;
-  size?: "sm" | "md" | "lg";
-  showInfo?: boolean;
-  className?: string;
-}
-
-export function GuruAvatar({
-  nama,
-  fotoUrl,
-  jabatan,
-  size = "md",
-  showInfo = false,
-  className,
-}: GuruAvatarProps) {
-  return (
-    <div className={cn("flex items-center gap-3", className)}>
-      <AvatarDisplay name={nama} imageUrl={fotoUrl} size={size} />
-      {showInfo && (
-        <div className="min-w-0">
-          <p className="font-medium truncate">{nama}</p>
-          {jabatan && (
-            <p className="text-sm text-muted-foreground truncate">{jabatan}</p>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Menu, LogOut, User, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,7 +25,7 @@ interface HeaderProps {
 
 export function Header({ onMenuClick, showMenuButton = true }: HeaderProps) {
   const router = useRouter();
-  const { guru, isAdmin, logout } = useAuthStore();
+  const { user, isAdmin, logout } = useAuthStore();
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -39,7 +39,6 @@ export function Header({ onMenuClick, showMenuButton = true }: HeaderProps) {
     <>
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-14 items-center gap-4 px-4">
-          {/* Menu button (mobile) */}
           {showMenuButton && (
             <Button
               variant="ghost"
@@ -52,19 +51,16 @@ export function Header({ onMenuClick, showMenuButton = true }: HeaderProps) {
             </Button>
           )}
 
-          {/* Logo */}
           <Link href="/" className="flex items-center gap-2 font-semibold">
             <span className="hidden sm:inline-block">
-              Absensi Yayasan Al Barakah
+              Administrasi PKBM - Yayasan Al Barakah
             </span>
-            <span className="sm:hidden">Yayasan</span>
+            <span className="sm:hidden">PKBM</span>
           </Link>
 
-          {/* Spacer */}
           <div className="flex-1" />
 
-          {/* User dropdown */}
-          {guru && (
+          {user && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -72,18 +68,17 @@ export function Header({ onMenuClick, showMenuButton = true }: HeaderProps) {
                   className="flex items-center gap-2 px-2"
                 >
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={guru.foto_url || undefined} />
                     <AvatarFallback className="text-xs">
-                      {getInitials(guru.nama)}
+                      {getInitials(user.full_name)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="hidden sm:flex flex-col items-start">
                     <span className="text-sm font-medium truncate max-w-[120px]">
-                      {guru.nama}
+                      {user.full_name}
                     </span>
                     {isAdmin && (
                       <span className="text-xs text-muted-foreground">
-                        Admin
+                        {user.role === "super_admin" ? "Super Admin" : "Admin TU"}
                       </span>
                     )}
                   </div>
@@ -93,9 +88,9 @@ export function Header({ onMenuClick, showMenuButton = true }: HeaderProps) {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
                   <div className="flex flex-col">
-                    <span>{guru.nama}</span>
-                    <span className="text-xs font-normal text-muted-foreground">
-                      {guru.email}
+                    <span>{user.full_name}</span>
+                    <span className="text-xs font-normal text-muted-foreground capitalize">
+                      {user.role.replace("_", " ")}
                     </span>
                   </div>
                 </DropdownMenuLabel>
@@ -120,7 +115,6 @@ export function Header({ onMenuClick, showMenuButton = true }: HeaderProps) {
         </div>
       </header>
 
-      {/* Logout confirmation dialog */}
       <ConfirmDialog
         open={showLogoutDialog}
         onOpenChange={setShowLogoutDialog}

@@ -4,8 +4,8 @@ import { LoginForm } from "@/components/features/auth";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Login - Yayasan Al Barakah",
-  description: "Masuk ke Sistem Absensi Digital Yayasan Al Barakah",
+  title: "Login - Administrasi PKBM",
+  description: "Masuk ke Sistem Persuratan & Administrasi PKBM Yayasan Al Barakah",
 };
 
 export default async function LoginPage() {
@@ -15,19 +15,8 @@ export default async function LoginPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // If already logged in, redirect
   if (user) {
-    const { data: guru } = await supabase
-      .from("guru")
-      .select("is_admin")
-      .eq("auth_user_id", user.id)
-      .single();
-
-    if (guru?.is_admin) {
-      redirect("/admin/dashboard");
-    } else {
-      redirect("/absen");
-    }
+    redirect("/dashboard");
   }
 
   return <LoginForm />;

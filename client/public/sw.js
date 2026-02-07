@@ -1,4 +1,4 @@
-const CACHE_NAME = 'absensi-yayasan-v1.0.4';
+const CACHE_NAME = 'administrasi-pkbm-v1.0.0';
 const OFFLINE_URL = '/offline.html';
 
 const urlsToCache = [
@@ -14,22 +14,21 @@ const urlsToCache = [
   '/icon/icon-512x512.png'
 ];
 
-// ✅ Install - Cache essential files including offline page
+// Install - Cache essential files including offline page
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('📦 Caching app shell + offline page');
         return cache.addAll(urlsToCache);
       })
       .catch((error) => {
-        console.error('❌ Cache failed:', error);
+        console.error('Cache failed:', error);
       })
   );
   self.skipWaiting();
 });
 
-// ✅ Activate - Clean old caches
+// Activate - Clean old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -37,7 +36,6 @@ self.addEventListener('activate', (event) => {
         cacheNames
           .filter((name) => name !== CACHE_NAME)
           .map((name) => {
-            console.log('🗑️ Deleting old cache:', name);
             return caches.delete(name);
           })
       );
@@ -46,7 +44,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// ✅ Helper: Fetch with timeout to prevent infinite loops
+// Helper: Fetch with timeout
 function fetchWithTimeout(request, timeout = 5000) {
   return Promise.race([
     fetch(request),
@@ -56,17 +54,15 @@ function fetchWithTimeout(request, timeout = 5000) {
   ]);
 }
 
-// ✅ Fetch - Network First, Cache Fallback (with proper offline handling)
+// Fetch - Network First, Cache Fallback
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET requests
   if (event.request.method !== 'GET') return;
 
-  // ✅ Handle Supabase API calls with timeout and offline fallback
+  // Handle Supabase API calls
   if (event.request.url.includes('supabase.co')) {
     event.respondWith(
       fetchWithTimeout(event.request, 5000)
         .catch(() => {
-          // Return offline response for failed API calls
           return new Response(
             JSON.stringify({
               error: 'Offline',
@@ -83,12 +79,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // ✅ Handle navigation requests (HTML pages)
+  // Handle navigation requests
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetchWithTimeout(event.request, 5000)
         .then((response) => {
-          // Cache successful page responses
           if (response.ok) {
             const responseClone = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
@@ -98,13 +93,11 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // Try cache first, then offline page
           return caches.match(event.request)
             .then((cachedResponse) => {
               if (cachedResponse) {
                 return cachedResponse;
               }
-              // Show offline page
               return caches.match(OFFLINE_URL);
             });
         })
@@ -112,11 +105,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // ✅ Handle other resources (images, scripts, etc)
+  // Handle other resources
   event.respondWith(
     fetchWithTimeout(event.request, 5000)
       .then((response) => {
-        // Cache successful responses
         if (response.ok) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -126,23 +118,21 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // Fallback to cache
         return caches.match(event.request)
           .then((cachedResponse) => {
             if (cachedResponse) {
               return cachedResponse;
             }
-            // For failed resources, return empty response to prevent errors
             return new Response('', { status: 200 });
           });
       })
   );
 });
 
-// ✅ Push Notification
+// Push Notification
 self.addEventListener('push', (event) => {
   const data = event.data?.json() || {};
-  const title = data.title || 'Absensi Yayasan Al Barakah';
+  const title = data.title || 'Administrasi PKBM';
   const options = {
     body: data.body || 'Ada notifikasi baru',
     icon: '/icon/icon-192x192.png',
@@ -171,7 +161,7 @@ self.addEventListener('push', (event) => {
   );
 });
 
-// ✅ Notification Click
+// Notification Click
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
@@ -182,13 +172,11 @@ self.addEventListener('notificationclick', (event) => {
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((clientList) => {
-        // Check if already open
         for (const client of clientList) {
           if (client.url === urlToOpen && 'focus' in client) {
             return client.focus();
           }
         }
-        // Open new window
         if (clients.openWindow) {
           return clients.openWindow(urlToOpen);
         }
@@ -196,7 +184,7 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// ✅ Message Handler (for manual cache refresh)
+// Message Handler
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();

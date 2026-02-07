@@ -1,24 +1,24 @@
 import { create } from "zustand";
 import { createClient } from "@/lib/supabase/client";
-import type { Guru } from "@/types";
+import type { UserProfile } from "@/types";
 
 interface AuthState {
-  guru: Guru | null;
+  user: UserProfile | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
   hasFetched: boolean;
-  fetchPromise: Promise<void> | null; // ✅ Track ongoing fetch
+  fetchPromise: Promise<void> | null;
 
-  setGuru: (guru: Guru | null) => void;
+  setUser: (user: UserProfile | null) => void;
   setLoading: (loading: boolean) => void;
-  fetchGuru: () => Promise<void>;
+  fetchUser: () => Promise<void>;
   logout: () => Promise<void>;
   reset: () => void;
 }
 
 const initialState = {
-  guru: null,
+  user: null,
   isLoading: false,
   isAuthenticated: false,
   isAdmin: false,
@@ -29,11 +29,12 @@ const initialState = {
 export const useAuthStore = create<AuthState>((set, get) => ({
   ...initialState,
 
-  setGuru: (guru) => {
+  setUser: (user) => {
+    const role = user?.role ?? "";
     set({
-      guru,
-      isAuthenticated: !!guru,
-      isAdmin: guru?.is_admin ?? false,
+      user,
+      isAuthenticated: !!user,
+      isAdmin: role === "super_admin" || role === "admin_tu",
       isLoading: false,
       hasFetched: true,
       fetchPromise: null,
@@ -42,20 +43,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   setLoading: (isLoading) => set({ isLoading }),
 
-  fetchGuru: async () => {
+  fetchUser: async () => {
     const state = get();
 
-    // ✅ FIXED: If already fetched and has guru, skip
-    if (state.hasFetched && state.guru) {
+    if (state.hasFetched && state.user) {
       return;
     }
 
-    // ✅ FIXED: If there's an ongoing fetch, wait for it
     if (state.fetchPromise) {
       return state.fetchPromise;
     }
 
-    // ✅ FIXED: If already loading, skip (prevent double calls)
     if (state.isLoading) {
       return;
     }
@@ -66,12 +64,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       try {
         set({ isLoading: true, fetchPromise: null });
 
-        // ✅ Check session first (faster than getUser)
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!session?.user) {
           set({
-            guru: null,
+            user: null,
             isAuthenticated: false,
             isAdmin: false,
             isLoading: false,
@@ -81,17 +78,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           return;
         }
 
-        const { data: guru, error } = await supabase
-          .from("guru")
+        const { data: profile, error } = await supabase
+          .from("user_profiles")
           .select("*")
-          .eq("auth_user_id", session.user.id)
+          .eq("id", session.user.id)
           .eq("is_active", true)
           .single();
 
-        if (error || !guru) {
-          console.error("Error fetching guru:", error);
+        if (error || !profile) {
           set({
-            guru: null,
+            user: null,
             isAuthenticated: false,
             isAdmin: false,
             isLoading: false,
@@ -101,26 +97,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           return;
         }
 
-        // Update last login (fire and forget)
-        supabase
-          .from("guru")
-          .update({ last_login_at: new Date().toISOString() })
-          .eq("id", guru.id)
-          .then(() => { })
-          .catch(() => { });
-
+        const role = profile.role;
         set({
-          guru,
+          user: profile,
           isAuthenticated: true,
-          isAdmin: guru.is_admin,
+          isAdmin: role === "super_admin" || role === "admin_tu",
           isLoading: false,
           hasFetched: true,
           fetchPromise: null,
         });
       } catch (error) {
-        console.error("fetchGuru error:", error);
+        console.error("fetchUser error:", error);
         set({
-          guru: null,
+          user: null,
           isAuthenticated: false,
           isAdmin: false,
           isLoading: false,
@@ -130,7 +119,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     })();
 
-    // ✅ Store the promise so other calls can wait for it
     set({ fetchPromise });
 
     return fetchPromise;
@@ -139,13 +127,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: async () => {
     const supabase = createClient();
 
-    // ✅ Reset state FIRST before signOut
     set({
-      guru: null,
+      user: null,
       isAuthenticated: false,
       isAdmin: false,
       isLoading: false,
-      hasFetched: false, // ✅ Reset to false so next login will fetch
+      hasFetched: false,
       fetchPromise: null,
     });
 
@@ -159,7 +146,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   reset: () => {
     set({
       ...initialState,
-      hasFetched: false, // ✅ Explicitly reset
+      hasFetched: false,
     });
   },
 }));

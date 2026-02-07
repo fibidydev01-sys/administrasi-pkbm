@@ -1,10 +1,8 @@
 import {
-  Camera,
-  History,
-  Users,
-  Calendar,
+  LayoutDashboard,
   FileText,
-  MapPin,
+  Building2,
+  Users,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -21,48 +19,42 @@ export interface NavSection {
   items: NavItem[];
 }
 
-/**
- * ✅ Guru navigation items
- */
-export const userNavItems: NavItem[] = [
+export const staffNavItems: NavItem[] = [
   {
-    title: "Absen",
-    href: "/absen",
-    icon: Camera,
+    title: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
   },
   {
-    title: "Riwayat",
-    href: "/riwayat",
-    icon: History,
+    title: "Surat Keluar",
+    href: "/surat",
+    icon: FileText,
   },
 ];
 
-/**
- * ✅ Admin navigation items - REMOVED DASHBOARD
- */
 export const adminNavItems: NavItem[] = [
   {
-    title: "Guru",
-    href: "/admin/guru",
-    icon: Users,
+    title: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
     adminOnly: true,
   },
   {
-    title: "Jadwal",
-    href: "/admin/jadwal",
-    icon: Calendar,
-    adminOnly: true,
-  },
-  {
-    title: "Rekap",
-    href: "/admin/rekap",
+    title: "Surat Keluar",
+    href: "/surat",
     icon: FileText,
     adminOnly: true,
   },
   {
-    title: "Peta",
-    href: "/admin/peta",
-    icon: MapPin,
+    title: "Lembaga",
+    href: "/admin/lembaga",
+    icon: Building2,
+    adminOnly: true,
+  },
+  {
+    title: "Pengguna",
+    href: "/admin/pengguna",
+    icon: Users,
     adminOnly: true,
   },
   {
@@ -73,18 +65,11 @@ export const adminNavItems: NavItem[] = [
   },
 ];
 
-/**
- * Get navigation items based on user role
- */
 export function getNavItems(isAdmin: boolean): NavSection[] {
   if (isAdmin) {
     return [
       {
-        title: "Menu Guru",
-        items: userNavItems,
-      },
-      {
-        title: "Admin",
+        title: "Administrasi",
         items: adminNavItems,
       },
     ];
@@ -92,14 +77,11 @@ export function getNavItems(isAdmin: boolean): NavSection[] {
 
   return [
     {
-      items: userNavItems,
+      items: staffNavItems,
     },
   ];
 }
 
-/**
- * Get all navigation items as flat array
- */
 export function getAllNavItems(isAdmin: boolean): NavItem[] {
-  return isAdmin ? [...userNavItems, ...adminNavItems] : userNavItems;
+  return isAdmin ? adminNavItems : staffNavItems;
 }

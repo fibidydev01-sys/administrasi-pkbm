@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -18,10 +18,12 @@ import { FullPageLoader, AvatarDisplay } from "@/components/shared";
 import { MobileBottomNav } from "@/components/layout/mobile-nav";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { createClient } from "@/lib/supabase/client";
+import { getInitials } from "@/lib/utils";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 function UserMenu() {
   const router = useRouter();
-  const guru = useAuthStore((state) => state.guru);
+  const user = useAuthStore((state) => state.user);
   const storeLogout = useAuthStore((state) => state.logout);
 
   const handleLogout = async () => {
@@ -29,23 +31,29 @@ function UserMenu() {
     router.push("/login");
   };
 
-  if (!guru) return null;
+  if (!user) return null;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="gap-2">
-          <AvatarDisplay name={guru.nama} imageUrl={guru.foto_url} size="sm" />
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="text-xs">
+              {getInitials(user.full_name)}
+            </AvatarFallback>
+          </Avatar>
           <span className="hidden sm:inline-block max-w-[120px] truncate">
-            {guru.nama}
+            {user.full_name}
           </span>
           <ChevronDown className="h-4 w-4 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <div className="px-2 py-1.5">
-          <p className="text-sm font-medium">{guru.nama}</p>
-          <p className="text-xs text-muted-foreground">{guru.email}</p>
+          <p className="text-sm font-medium">{user.full_name}</p>
+          <p className="text-xs text-muted-foreground capitalize">
+            {user.role.replace("_", " ")}
+          </p>
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
@@ -69,20 +77,18 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
   const router = useRouter();
   const authListenerSetup = useRef(false);
 
-  const guru = useAuthStore((state) => state.guru);
+  const user = useAuthStore((state) => state.user);
   const isLoading = useAuthStore((state) => state.isLoading);
-  const isAdmin = useAuthStore((state) => state.isAdmin);
   const hasFetched = useAuthStore((state) => state.hasFetched);
-  const fetchGuru = useAuthStore((state) => state.fetchGuru);
+  const fetchUser = useAuthStore((state) => state.fetchUser);
   const reset = useAuthStore((state) => state.reset);
 
   useEffect(() => {
     if (!hasFetched && !isLoading) {
-      fetchGuru();
+      fetchUser();
     }
   }, []);
 
@@ -95,15 +101,13 @@ export default function DashboardLayout({
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state change:", event);
-
       if (event === "SIGNED_OUT") {
         reset();
         router.push("/login");
       } else if (event === "SIGNED_IN" && session) {
         const state = useAuthStore.getState();
-        if (!state.guru) {
-          fetchGuru();
+        if (!state.user) {
+          fetchUser();
         }
       }
     });
@@ -112,13 +116,13 @@ export default function DashboardLayout({
       subscription.unsubscribe();
       authListenerSetup.current = false;
     };
-  }, [router, reset, fetchGuru]);
+  }, [router, reset, fetchUser]);
 
   useEffect(() => {
-    if (hasFetched && !isLoading && !guru) {
+    if (hasFetched && !isLoading && !user) {
       router.push("/login");
     }
-  }, [hasFetched, isLoading, guru, router]);
+  }, [hasFetched, isLoading, user, router]);
 
   if (!hasFetched) {
     return <FullPageLoader text="Memuat..." />;
@@ -128,7 +132,7 @@ export default function DashboardLayout({
     return <FullPageLoader text="Mengautentikasi..." />;
   }
 
-  if (!guru) {
+  if (!user) {
     return <FullPageLoader text="Mengalihkan..." />;
   }
 
@@ -142,12 +146,12 @@ export default function DashboardLayout({
             <div className="relative w-8 h-8">
               <Image
                 src="/icon/icon-96x96.png"
-                alt="Yayasan"
+                alt="PKBM"
                 fill
                 className="object-contain"
               />
             </div>
-            <span className="font-semibold text-sm md:text-base">Yayasan Al Barakah</span>
+            <span className="font-semibold text-sm md:text-base">Administrasi PKBM</span>
           </Link>
 
           <div className="flex-1" />

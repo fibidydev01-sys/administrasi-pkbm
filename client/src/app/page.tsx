@@ -12,16 +12,5 @@ export default async function HomePage() {
     redirect("/login");
   }
 
-  // Check if admin
-  const { data: guru } = await supabase
-    .from("guru")
-    .select("is_admin")
-    .eq("auth_user_id", user.id)
-    .single();
-
-  if (guru?.is_admin) {
-    redirect("/admin/guru");
-  } else {
-    redirect("/absen");
-  }
+  redirect("/dashboard");
 }

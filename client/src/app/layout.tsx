@@ -1,55 +1,49 @@
-// src/app/layout.tsx
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
-import { AuthProvider, NotificationProvider } from "@/components/providers";
-import { PWAInstallPrompt, OfflineDetector } from "@/components/shared";
+import { AuthProvider } from "@/components/providers";
+import { OfflineDetector } from "@/components/shared";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: {
-    default: "Absensi Yayasan Al Barakah",
-    template: "%s | Absensi Yayasan",
+    default: "Administrasi PKBM - Yayasan Al Barakah",
+    template: "%s | Administrasi PKBM",
   },
-  description: "Sistem Absensi Digital Yayasan Al Barakah - Madiun",
+  description: "Sistem Persuratan & Administrasi PKBM Yayasan Al Barakah",
   manifest: "/manifest.json",
 
-  // ✅ PWA Meta Tags
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Absensi Yayasan",
+    title: "Administrasi PKBM",
   },
 
-  // ✅ Open Graph for sharing
   openGraph: {
     type: "website",
     locale: "id_ID",
-    url: "https://absensi-yayasan.vercel.app", // Ganti dengan URL production
-    siteName: "Absensi Yayasan Al Barakah",
-    title: "Absensi Yayasan Al Barakah",
-    description: "Sistem Absensi Digital untuk Guru dan Tutor",
+    siteName: "Administrasi PKBM - Yayasan Al Barakah",
+    title: "Administrasi PKBM - Yayasan Al Barakah",
+    description: "Sistem Persuratan & Administrasi PKBM Yayasan Al Barakah",
     images: [
       {
         url: "/icon/icon-512x512.png",
         width: 512,
         height: 512,
-        alt: "Absensi Yayasan Logo",
+        alt: "Administrasi PKBM Logo",
       },
     ],
   },
 
-  // ✅ Twitter Card
   twitter: {
     card: "summary",
-    title: "Absensi Yayasan Al Barakah",
-    description: "Sistem Absensi Digital",
+    title: "Administrasi PKBM - Yayasan Al Barakah",
+    description: "Sistem Persuratan & Administrasi PKBM",
     images: ["/icon/icon-512x512.png"],
   },
 
-  // ✅ Icons (Fixed favicon paths)
   icons: {
     icon: [
       { url: "/favicon/favicon.ico" },
@@ -67,17 +61,16 @@ export const metadata: Metadata = {
     address: false,
   },
 
-  // ✅ Other metadata
-  applicationName: "Absensi Yayasan",
+  applicationName: "Administrasi PKBM",
   authors: [{ name: "Yayasan Al Barakah" }],
   keywords: [
-    "absensi",
+    "administrasi",
+    "pkbm",
+    "persuratan",
     "yayasan",
     "al barakah",
-    "madiun",
+    "surat",
     "digital",
-    "guru",
-    "tutor",
     "pendidikan",
   ],
   category: "education",
@@ -89,7 +82,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  viewportFit: "cover", // ✅ For notch/safe area
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -100,22 +93,18 @@ export default function RootLayout({
   return (
     <html lang="id" suppressHydrationWarning>
       <head>
-        {/* ✅ PWA Meta Tags */}
         <link rel="apple-touch-icon" href="/favicon/apple-touch-icon.png" />
         <link rel="apple-touch-startup-image" href="/icon/icon-512x512.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Absensi Yayasan" />
+        <meta name="apple-mobile-web-app-title" content="Administrasi PKBM" />
 
-        {/* ✅ Android Chrome */}
         <meta name="mobile-web-app-capable" content="yes" />
 
-        {/* ✅ Microsoft Tile */}
         <meta name="msapplication-TileColor" content="#16a34a" />
         <meta name="msapplication-TileImage" content="/icon/icon-144x144.png" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
 
-        {/* ✅ Preconnect to External Services */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -127,16 +116,10 @@ export default function RootLayout({
 
       <body className={inter.className}>
         <AuthProvider>
-          <NotificationProvider>
-            {children}
-
-            {/* ✅ PWA Components */}
-            <OfflineDetector />
-            <PWAInstallPrompt />
-          </NotificationProvider>
+          {children}
+          <OfflineDetector />
         </AuthProvider>
 
-        {/* ✅ Toast Notifications */}
         <Toaster position="top-center" richColors />
       </body>
     </html>

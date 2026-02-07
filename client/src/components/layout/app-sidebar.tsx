@@ -3,36 +3,32 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
-  ClipboardCheck,
-  History,
-  ArrowLeftRight,
-  Users,
-  Calendar,
-  Settings,
-  MapPin,
+  LayoutDashboard,
   FileText,
+  Building2,
+  Users,
+  Settings,
 } from "lucide-react";
 import { useAuthStore } from "@/stores";
 import { cn } from "@/lib/utils";
 
-const teacherNavItems = [
-  { href: "/absen", label: "Absen", icon: ClipboardCheck },
-  { href: "/riwayat", label: "Riwayat", icon: History },
-  { href: "/tukar-jadwal", label: "Tukar Jadwal", icon: ArrowLeftRight },
+const staffNavItems = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/surat", label: "Surat Keluar", icon: FileText },
 ];
 
 const adminNavItems = [
-  { href: "/admin/guru", label: "Guru", icon: Users },
-  { href: "/admin/jadwal", label: "Jadwal", icon: Calendar },
-  { href: "/admin/rekap", label: "Rekap", icon: FileText },
-  { href: "/admin/peta", label: "Peta", icon: MapPin },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/surat", label: "Surat Keluar", icon: FileText },
+  { href: "/admin/lembaga", label: "Lembaga", icon: Building2 },
+  { href: "/admin/pengguna", label: "Pengguna", icon: Users },
   { href: "/admin/pengaturan", label: "Pengaturan", icon: Settings },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
   const isAdmin = useAuthStore((state) => state.isAdmin);
-  const navItems = isAdmin ? [...adminNavItems, ...teacherNavItems] : teacherNavItems;
+  const navItems = isAdmin ? adminNavItems : staffNavItems;
 
   return (
     <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-50 border-r bg-background">
@@ -42,7 +38,7 @@ export function AppSidebar() {
         <div className="space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
 
             return (
               <Link

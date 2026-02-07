@@ -1,7 +1,7 @@
 {
-  "name": "Absensi Yayasan Al Barakah",
-  "short_name": "Absensi Yayasan",
-  "description": "Sistem Absensi Digital Yayasan Al Barakah",
+  "name": "Administrasi PKBM - Yayasan Al Barakah",
+  "short_name": "Administrasi PKBM",
+  "description": "Sistem Persuratan & Administrasi PKBM Yayasan Al Barakah",
   "icons": [
     {
       "src": "/favicon/web-app-manifest-192x192.png",
