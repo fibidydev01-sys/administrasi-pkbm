@@ -37,6 +37,23 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "unaccent";
 
 -- ============================================================================
+-- 1.1 CREATE TEXT SEARCH CONFIGURATION: indonesian
+-- PostgreSQL tidak punya config 'indonesian' bawaan, jadi kita buat sendiri
+-- Menggunakan 'simple' dictionary + unaccent untuk handle karakter khusus
+-- ============================================================================
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_ts_config WHERE cfgname = 'indonesian'
+  ) THEN
+    CREATE TEXT SEARCH CONFIGURATION indonesian (COPY = simple);
+    ALTER TEXT SEARCH CONFIGURATION indonesian
+      ALTER MAPPING FOR asciiword, asciihword, hword_asciipart, word, hword, hword_part
+      WITH unaccent, simple;
+  END IF;
+END $$;
+
+-- ============================================================================
 -- 2. DROP EXISTING TABLES (untuk development/reset)
 -- ============================================================================
 -- HATI-HATI: Uncomment hanya jika ingin reset database!
