@@ -5,12 +5,12 @@ import { BlobProvider, pdf } from "@react-pdf/renderer";
 import { Eye, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import type { SuratWithRelations } from "@/types";
 import type { PaperSize } from "@/constants";
 import { DEFAULT_PAPER_SIZE } from "@/constants";
@@ -53,33 +53,37 @@ export default function PDFPreviewModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
         <Button variant="outline">
           <Eye className="h-4 w-4 mr-2" />
           Preview PDF
         </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between pr-8">
-            <span>Preview Surat — {surat.nomor_surat || "Draft"}</span>
-            <Button
-              size="sm"
-              onClick={handleDownload}
-              disabled={downloading}
-            >
-              {downloading ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Download className="h-4 w-4 mr-2" />
-              )}
-              Download PDF
-            </Button>
-          </DialogTitle>
-        </DialogHeader>
+      </SheetTrigger>
+      <SheetContent
+        side="right"
+        className="w-full sm:w-[85vw] sm:max-w-5xl flex flex-col p-0"
+      >
+        <SheetHeader className="flex-row items-center justify-between border-b px-4 py-3">
+          <SheetTitle className="text-base">
+            {surat.nomor_surat || "Draft"}
+          </SheetTitle>
+          <Button
+            size="sm"
+            onClick={handleDownload}
+            disabled={downloading}
+            className="mr-8"
+          >
+            {downloading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
+            Download PDF
+          </Button>
+        </SheetHeader>
 
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 p-2">
           {open && (
             <BlobProvider
               document={
@@ -109,7 +113,7 @@ export default function PDFPreviewModal({
                 return (
                   <iframe
                     src={url!}
-                    className="w-full h-full border rounded"
+                    className="w-full h-full rounded border"
                     title="PDF Preview"
                   />
                 );
@@ -117,7 +121,7 @@ export default function PDFPreviewModal({
             </BlobProvider>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
