@@ -11,23 +11,25 @@ interface PKBMLayoutProps {
 
 export default function PKBMLayout({ surat }: PKBMLayoutProps) {
   return (
-    <div className="surat-container a4-page">
+    <>
       <KopSurat lembaga={surat.lembaga} variant="pkbm" />
 
       <SuratMeta
         nomorSurat={surat.nomor_surat}
         perihal={surat.perihal}
         lampiran={surat.lampiran}
+        sifat={surat.sifat}
       />
 
       <div className="surat-tujuan mt-5">
-        <p>
-          Kepada Yth,
-          <br />
-          {surat.kepada}
-          <br />
-          {surat.alamat_tujuan && <>di {surat.alamat_tujuan}</>}
-        </p>
+        <p>Kepada Yth.</p>
+        <p>{surat.kepada}</p>
+        {surat.alamat_tujuan && (
+          <p>
+            di{" "}
+            <span style={{ marginLeft: "1em" }}>{surat.alamat_tujuan}</span>
+          </p>
+        )}
       </div>
 
       <SuratBody isiSurat={surat.isi_surat} />
@@ -36,12 +38,11 @@ export default function PKBMLayout({ surat }: PKBMLayoutProps) {
         tanggal={surat.tanggal_surat}
         snapshot={surat.snapshot_ttd as unknown as SnapshotTTD}
         lembaga={surat.lembaga}
-        position="right"
       />
 
       {surat.tembusan && surat.tembusan.length > 0 && (
         <TembusanList tembusan={surat.tembusan} />
       )}
-    </div>
+    </>
   );
 }
