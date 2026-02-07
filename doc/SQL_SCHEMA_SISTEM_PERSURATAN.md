@@ -169,6 +169,15 @@ CREATE TABLE surat_keluar (
   deleted_by UUID REFERENCES auth.users(id) ON DELETE SET NULL
 );
 
+-- Foreign keys ke user_profiles (untuk PostgREST joins)
+-- Ini TAMBAHAN di samping FK ke auth.users yang sudah ada di atas
+ALTER TABLE surat_keluar ADD CONSTRAINT surat_keluar_created_by_profile_fkey
+  FOREIGN KEY (created_by) REFERENCES user_profiles(id) ON DELETE SET NULL;
+ALTER TABLE surat_keluar ADD CONSTRAINT surat_keluar_approved_by_profile_fkey
+  FOREIGN KEY (approved_by) REFERENCES user_profiles(id) ON DELETE SET NULL;
+ALTER TABLE surat_keluar ADD CONSTRAINT surat_keluar_deleted_by_profile_fkey
+  FOREIGN KEY (deleted_by) REFERENCES user_profiles(id) ON DELETE SET NULL;
+
 -- Indexes untuk performa
 CREATE INDEX idx_surat_lembaga ON surat_keluar(lembaga_id);
 CREATE INDEX idx_surat_tanggal ON surat_keluar(tanggal_surat DESC);
