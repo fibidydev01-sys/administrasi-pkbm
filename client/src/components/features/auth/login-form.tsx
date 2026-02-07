@@ -21,7 +21,6 @@ import { Loader2, LogIn, AlertCircle, Eye, EyeOff, Mail, Lock, HelpCircle } from
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores";
 import { loginSchema, type LoginFormData } from "@/lib/validators";
-import { isAdminRole } from "@/types";
 
 export function LoginForm() {
   const router = useRouter();

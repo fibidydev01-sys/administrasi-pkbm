@@ -102,8 +102,6 @@ export default function RootLayout({
         <meta name="msapplication-TileImage" content="/icon/icon-144x144.png" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
 
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           rel="preconnect"
           href={process.env.NEXT_PUBLIC_SUPABASE_URL}
