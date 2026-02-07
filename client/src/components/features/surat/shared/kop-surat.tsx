@@ -1,6 +1,7 @@
 import type { Lembaga } from "@/types";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { KOP_CONFIG, SURAT_TYPOGRAPHY } from "@/constants";
 
 export type KopVariant = "yayasan" | "pkbm" | "ra" | "kb" | "tk";
 
@@ -11,13 +12,13 @@ interface KopSuratProps {
 
 const VARIANT_STYLES: Record<
   KopVariant,
-  { logoPosition: "center" | "left"; titleSize: string; dividerStyle: "double" | "single" }
+  { logoPosition: "center" | "left" }
 > = {
-  yayasan: { logoPosition: "center", titleSize: "18pt", dividerStyle: "double" },
-  pkbm: { logoPosition: "left", titleSize: "16pt", dividerStyle: "single" },
-  ra: { logoPosition: "center", titleSize: "16pt", dividerStyle: "double" },
-  kb: { logoPosition: "center", titleSize: "16pt", dividerStyle: "single" },
-  tk: { logoPosition: "center", titleSize: "16pt", dividerStyle: "double" },
+  yayasan: { logoPosition: "center" },
+  pkbm: { logoPosition: "left" },
+  ra: { logoPosition: "center" },
+  kb: { logoPosition: "center" },
+  tk: { logoPosition: "center" },
 };
 
 export default function KopSurat({ lembaga, variant = "yayasan" }: KopSuratProps) {
@@ -33,16 +34,25 @@ export default function KopSurat({ lembaga, variant = "yayasan" }: KopSuratProps
         )}
       >
         {lembaga.logo_url && (
-          <div className="relative w-20 h-20 flex-shrink-0">
+          <div
+            className="relative flex-shrink-0"
+            style={{
+              width: `${KOP_CONFIG.logoSize}mm`,
+              height: `${KOP_CONFIG.logoSize}mm`,
+            }}
+          >
             <Image src={lembaga.logo_url} alt="Logo" fill className="object-contain" />
           </div>
         )}
 
         <div className={cn("flex-1", styles.logoPosition === "center" && "text-center")}>
-          <h1 className="font-bold uppercase" style={{ fontSize: styles.titleSize }}>
+          <h1
+            className="font-bold uppercase"
+            style={{ fontSize: SURAT_TYPOGRAPHY.kopUnitSize }}
+          >
             {lembaga.nama}
           </h1>
-          <div className="text-[10pt] mt-1">
+          <div style={{ fontSize: SURAT_TYPOGRAPHY.kopAlamatSize }} className="mt-1">
             <p>{lembaga.alamat}</p>
             <p
               className={cn(
@@ -58,13 +68,7 @@ export default function KopSurat({ lembaga, variant = "yayasan" }: KopSuratProps
         </div>
       </div>
 
-      <div
-        className={cn(
-          "mt-3 mb-5",
-          styles.dividerStyle === "double" && "border-t-[3px] border-double border-black",
-          styles.dividerStyle === "single" && "border-t-2 border-black"
-        )}
-      />
+      <hr className="kop-divider" />
     </header>
   );
 }

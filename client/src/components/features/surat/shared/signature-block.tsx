@@ -1,5 +1,6 @@
 import type { Lembaga, SnapshotTTD } from "@/types";
 import { formatTanggalSurat } from "@/lib/date";
+import { SIGNATURE_CONFIG, SURAT_TYPOGRAPHY } from "@/constants";
 import Image from "next/image";
 
 interface SignatureBlockProps {
@@ -24,8 +25,9 @@ export default function SignatureBlock({
 
   return (
     <div
-      className="signature-block mt-10 w-1/2"
+      className="signature-block mt-10"
       style={{
+        width: SIGNATURE_CONFIG.width,
         marginLeft: position === "right" ? "auto" : position === "center" ? "auto" : 0,
         marginRight: position === "center" ? "auto" : 0,
       }}
@@ -33,20 +35,26 @@ export default function SignatureBlock({
       <p className="text-center">{formatTanggalSurat(tanggal)}</p>
       <p className="text-center mt-1">{ttdData.jabatan},</p>
 
-      {ttdData.image_url && (
-        <div className="relative w-full h-16 my-3">
+      {ttdData.image_url ? (
+        <div className="relative w-full my-3" style={{ height: `${SIGNATURE_CONFIG.signatureSpace}px` }}>
           <Image src={ttdData.image_url} alt="TTD" fill className="object-contain" />
         </div>
+      ) : (
+        <div style={{ height: `${SIGNATURE_CONFIG.signatureSpace}px` }} />
       )}
 
-      <p
-        className="text-center font-bold underline"
-        style={{ marginTop: ttdData.image_url ? "8px" : "60px" }}
-      >
+      <p className="text-center font-bold underline">
         {ttdData.nama}
       </p>
 
-      {ttdData.nip && <p className="text-center text-[10pt] mt-1">NIP. {ttdData.nip}</p>}
+      {ttdData.nip && (
+        <p
+          className="text-center mt-1"
+          style={{ fontSize: SURAT_TYPOGRAPHY.nipSize }}
+        >
+          NIP. {ttdData.nip}
+        </p>
+      )}
     </div>
   );
 }
