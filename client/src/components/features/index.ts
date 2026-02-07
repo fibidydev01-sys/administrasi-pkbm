@@ -5,3 +5,6 @@
 
 // Auth
 export * from "./auth";
+
+// Surat
+export * from "./surat";

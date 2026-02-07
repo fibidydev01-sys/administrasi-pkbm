@@ -9,6 +9,7 @@ interface PageHeaderProps {
   backHref?: string;
   backLabel?: string;
   action?: React.ReactNode;
+  children?: React.ReactNode;
   className?: string;
 }
 
@@ -18,6 +19,7 @@ export function PageHeader({
   backHref,
   backLabel = "Kembali",
   action,
+  children,
   className,
 }: PageHeaderProps) {
   return (
@@ -37,7 +39,7 @@ export function PageHeader({
             <p className="mt-1 text-muted-foreground">{description}</p>
           )}
         </div>
-        {action && <div>{action}</div>}
+        {(action || children) && <div>{action || children}</div>}
       </div>
     </div>
   );

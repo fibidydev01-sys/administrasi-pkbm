@@ -76,12 +76,16 @@ export function DeleteConfirmDialog({
   open,
   onOpenChange,
   itemName,
+  title,
+  description,
   isLoading,
   onConfirm,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  itemName: string;
+  itemName?: string;
+  title?: string;
+  description?: string;
   isLoading?: boolean;
   onConfirm: () => void;
 }) {
@@ -89,8 +93,11 @@ export function DeleteConfirmDialog({
     <ConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Hapus Data"
-      description={`Apakah Anda yakin ingin menghapus ${itemName}? Tindakan ini tidak dapat dibatalkan.`}
+      title={title || "Hapus Data"}
+      description={
+        description ||
+        `Apakah Anda yakin ingin menghapus ${itemName || "data ini"}? Tindakan ini tidak dapat dibatalkan.`
+      }
       confirmLabel="Hapus"
       variant="destructive"
       isLoading={isLoading}
