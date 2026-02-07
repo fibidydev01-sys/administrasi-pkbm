@@ -25,7 +25,7 @@ export default function KopSurat({ lembaga, variant = "yayasan" }: KopSuratProps
   const styles = VARIANT_STYLES[variant];
 
   return (
-    <header className="kop-surat">
+    <div className="kop-surat">
       <div
         className={cn(
           "flex items-center gap-4",
@@ -69,6 +69,6 @@ export default function KopSurat({ lembaga, variant = "yayasan" }: KopSuratProps
       </div>
 
       <hr className="kop-divider" />
-    </header>
+    </div>
   );
 }

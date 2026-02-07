@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import dynamic from "next/dynamic";
 import { ArrowLeft, Pencil, Trash2, Printer, CheckCircle } from "lucide-react";
 
 import { useSurat, usePermissions } from "@/hooks";
@@ -17,6 +18,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import SuratPreview from "@/components/features/surat/surat-preview";
+
+const PDFDownloadButton = dynamic(
+  () => import("@/components/features/surat/pdf/pdf-download-button"),
+  { ssr: false }
+);
 
 export default function SuratDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -99,6 +105,7 @@ export default function SuratDetailPage({ params }: { params: Promise<{ id: stri
             <Printer className="h-4 w-4 mr-2" />
             Cetak
           </Button>
+          <PDFDownloadButton surat={surat} paperSize={paperSize} />
           {can.deleteSurat && surat.status === "draft" && (
             <Button variant="destructive" onClick={() => setShowDelete(true)}>
               <Trash2 className="h-4 w-4 mr-2" />
