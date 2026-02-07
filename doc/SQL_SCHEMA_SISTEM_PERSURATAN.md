@@ -784,6 +784,30 @@ CREATE POLICY "Only super admin can manage roles"
   );
 
 -- ============================================================================
+-- 6.6 RLS POLICIES: nomor_surat_counter
+-- ============================================================================
+
+-- Authenticated users can read counter (needed by generate_nomor_surat)
+CREATE POLICY "Authenticated users can read counter"
+  ON nomor_surat_counter
+  FOR SELECT
+  TO authenticated
+  USING (true);
+
+-- Authenticated users can upsert counter (needed by generate_nomor_surat)
+CREATE POLICY "Authenticated users can upsert counter"
+  ON nomor_surat_counter
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (true);
+
+CREATE POLICY "Authenticated users can update counter"
+  ON nomor_surat_counter
+  FOR UPDATE
+  TO authenticated
+  USING (true);
+
+-- ============================================================================
 -- 7. VIEWS (Optional, untuk kemudahan query)
 -- ============================================================================
 
