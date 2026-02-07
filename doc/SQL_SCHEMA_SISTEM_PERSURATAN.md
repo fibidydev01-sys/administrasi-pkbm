@@ -336,6 +336,19 @@ INSERT INTO lembaga (kode, nama, alamat, telepon, email, website, nomor_prefix, 
 -- ============================================================================
 
 -- ============================================================================
+-- 5.0 HELPER FUNCTIONS: get_my_role / get_my_lembaga_id
+-- SECURITY DEFINER = bypass RLS, mencegah infinite recursion
+-- pada RLS policies di user_profiles yang self-reference
+-- ============================================================================
+CREATE OR REPLACE FUNCTION public.get_my_role()
+RETURNS TEXT LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public
+AS $$ SELECT role FROM public.user_profiles WHERE id = auth.uid() $$;
+
+CREATE OR REPLACE FUNCTION public.get_my_lembaga_id()
+RETURNS UUID LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public
+AS $$ SELECT lembaga_id FROM public.user_profiles WHERE id = auth.uid() $$;
+
+-- ============================================================================
 -- 5.1 FUNCTION: update_updated_at_column
 -- Auto-update updated_at timestamp
 -- ============================================================================
@@ -742,19 +755,12 @@ CREATE POLICY "Users can manage tembusan"
 -- 6.4 RLS POLICIES: user_profiles
 -- ============================================================================
 
--- Super admin: full access
+-- Super admin: full access (uses SECURITY DEFINER helper to avoid recursion)
 CREATE POLICY "Super admin can manage all profiles"
   ON user_profiles
   FOR ALL
   TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM user_profiles up
-      WHERE up.id = auth.uid()
-      AND up.role = 'super_admin'
-      AND up.is_active = true
-    )
-  );
+  USING (get_my_role() = 'super_admin');
 
 -- Users can read their own profile
 CREATE POLICY "Users can read own profile"
@@ -771,8 +777,8 @@ CREATE POLICY "Users can update own profile"
   USING (id = auth.uid())
   WITH CHECK (
     id = auth.uid()
-    AND role = (SELECT role FROM user_profiles WHERE id = auth.uid())
-    AND lembaga_id = (SELECT lembaga_id FROM user_profiles WHERE id = auth.uid())
+    AND role = get_my_role()
+    AND lembaga_id = get_my_lembaga_id()
   );
 
 -- ============================================================================
@@ -988,6 +994,8 @@ WHERE deleted_at IS NULL;
 -- ============================================================================
 
 -- Grant execute permissions on functions to authenticated users
+GRANT EXECUTE ON FUNCTION get_my_role TO authenticated;
+GRANT EXECUTE ON FUNCTION get_my_lembaga_id TO authenticated;
 GRANT EXECUTE ON FUNCTION generate_nomor_surat TO authenticated;
 GRANT EXECUTE ON FUNCTION create_surat_with_snapshot TO authenticated;
 GRANT EXECUTE ON FUNCTION search_surat TO authenticated;
