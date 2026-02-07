@@ -94,7 +94,7 @@ export default function SuratDetailPage({ params }: { params: Promise<{ id: stri
       </PageHeader>
 
       {/* Info Card */}
-      <Card className="print:hidden">
+      <Card className="no-print">
         <CardHeader>
           <CardTitle className="text-base">Informasi Surat</CardTitle>
         </CardHeader>

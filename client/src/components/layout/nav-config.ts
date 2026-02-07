@@ -4,6 +4,7 @@ import {
   Building2,
   Users,
   Settings,
+  BarChart3,
   type LucideIcon,
 } from "lucide-react";
 
@@ -30,6 +31,11 @@ export const staffNavItems: NavItem[] = [
     href: "/surat",
     icon: FileText,
   },
+  {
+    title: "Lembaga",
+    href: "/lembaga",
+    icon: Building2,
+  },
 ];
 
 export const adminNavItems: NavItem[] = [
@@ -37,14 +43,20 @@ export const adminNavItems: NavItem[] = [
     title: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
-    adminOnly: true,
   },
   {
     title: "Surat Keluar",
     href: "/surat",
     icon: FileText,
-    adminOnly: true,
   },
+  {
+    title: "Laporan",
+    href: "/laporan",
+    icon: BarChart3,
+  },
+];
+
+export const adminManageItems: NavItem[] = [
   {
     title: "Lembaga",
     href: "/admin/lembaga",
@@ -69,8 +81,12 @@ export function getNavItems(isAdmin: boolean): NavSection[] {
   if (isAdmin) {
     return [
       {
-        title: "Administrasi",
+        title: "Menu Utama",
         items: adminNavItems,
+      },
+      {
+        title: "Administrasi",
+        items: adminManageItems,
       },
     ];
   }
@@ -83,5 +99,8 @@ export function getNavItems(isAdmin: boolean): NavSection[] {
 }
 
 export function getAllNavItems(isAdmin: boolean): NavItem[] {
-  return isAdmin ? adminNavItems : staffNavItems;
+  if (isAdmin) {
+    return [...adminNavItems, ...adminManageItems];
+  }
+  return staffNavItems;
 }
