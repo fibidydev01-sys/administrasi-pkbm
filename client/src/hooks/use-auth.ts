@@ -85,7 +85,7 @@ export function useRequireAdmin() {
       if (!isAuthenticated) {
         router.push("/login");
       } else if (!isAdmin) {
-        router.push("/dashboard");
+        router.push("/surat");
       }
     }
   }, [isAuthenticated, isAdmin, isLoading, hasFetched, router]);

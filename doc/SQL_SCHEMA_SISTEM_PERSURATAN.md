@@ -1,8 +1,8 @@
 # 🗄️ DATABASE SCHEMA - SISTEM PERSURATAN
 
-**Version:** 1.0.0  
-**Database:** PostgreSQL (Supabase)  
-**Last Updated:** 2025-02-07
+**Version:** 2.0.0
+**Database:** PostgreSQL (Supabase)
+**Last Updated:** 2026-02-08
 
 ---
 
@@ -149,10 +149,23 @@ CREATE TABLE surat_keluar (
   --   "captured_at": "2025-02-07T10:30:00Z"
   -- }
   
+  -- Template System
+  -- template_id references code-based registry (constants/template-registry.ts)
+  -- NULL = legacy/non-template surat, 'surat-umum' = default template
+  template_id VARCHAR(100),
+  template_data JSONB DEFAULT NULL,
+  -- template_data stores filled field values:
+  -- {
+  --   "nama_peserta": "Ahmad Fauzi",
+  --   "ttl_peserta": "Jakarta, 15 Maret 2005",
+  --   "program_paket": "Paket B",
+  --   "tahun_ajaran": "2025/2026"
+  -- }
+
   -- File Management
   pdf_url TEXT, -- generated PDF path di Supabase Storage
   pdf_generated_at TIMESTAMP WITH TIME ZONE,
-  
+
   -- Status & Workflow
   status VARCHAR(20) DEFAULT 'draft', -- draft | approved | sent | archived
   
@@ -186,6 +199,9 @@ CREATE INDEX idx_surat_status ON surat_keluar(status);
 CREATE INDEX idx_surat_created_by ON surat_keluar(created_by);
 CREATE INDEX idx_surat_created_at ON surat_keluar(created_at DESC);
 
+-- Template index
+CREATE INDEX idx_surat_template ON surat_keluar(template_id) WHERE template_id IS NOT NULL;
+
 -- Full-text search index untuk pencarian isi surat
 CREATE INDEX idx_surat_search ON surat_keluar 
 USING gin(to_tsvector('indonesian', 
@@ -202,6 +218,8 @@ WHERE deleted_at IS NULL;
 COMMENT ON TABLE surat_keluar IS 'Data surat keluar yang dibuat staff';
 COMMENT ON COLUMN surat_keluar.snapshot_ttd IS 'Snapshot data TTD saat surat dibuat untuk historis';
 COMMENT ON COLUMN surat_keluar.status IS 'Status workflow: draft | approved | sent | archived';
+COMMENT ON COLUMN surat_keluar.template_id IS 'ID template dari registry (code-based), NULL untuk surat non-template';
+COMMENT ON COLUMN surat_keluar.template_data IS 'JSONB filled field values from template';
 
 -- ============================================================================
 -- 3.3 TABEL: surat_tembusan
@@ -848,7 +866,7 @@ CREATE POLICY "Authenticated users can update counter"
 -- Gabungan surat dengan data lembaga (untuk export/reporting)
 -- ============================================================================
 CREATE OR REPLACE VIEW v_surat_lengkap AS
-SELECT 
+SELECT
   s.id,
   s.nomor_surat,
   s.tanggal_surat,
@@ -859,6 +877,8 @@ SELECT
   s.lampiran,
   s.sifat,
   s.status,
+  s.template_id,
+  s.template_data,
   s.pdf_url,
   s.created_at,
   
@@ -902,32 +922,6 @@ WHERE s.deleted_at IS NULL;
 
 -- Comments
 COMMENT ON VIEW v_surat_lengkap IS 'View lengkap surat dengan data lembaga dan tembusan';
-
--- ============================================================================
--- 7.2 VIEW: v_statistik_surat
--- Statistik surat per lembaga per bulan
--- ============================================================================
-CREATE OR REPLACE VIEW v_statistik_surat AS
-SELECT 
-  l.id AS lembaga_id,
-  l.kode AS lembaga_kode,
-  l.nama AS lembaga_nama,
-  EXTRACT(YEAR FROM s.tanggal_surat) AS tahun,
-  EXTRACT(MONTH FROM s.tanggal_surat) AS bulan,
-  COUNT(*) AS total_surat,
-  COUNT(*) FILTER (WHERE s.status = 'draft') AS draft,
-  COUNT(*) FILTER (WHERE s.status = 'approved') AS approved,
-  COUNT(*) FILTER (WHERE s.status = 'sent') AS sent,
-  COUNT(*) FILTER (WHERE s.sifat = 'Penting') AS surat_penting,
-  COUNT(*) FILTER (WHERE s.sifat = 'Rahasia') AS surat_rahasia
-FROM surat_keluar s
-JOIN lembaga l ON l.id = s.lembaga_id
-WHERE s.deleted_at IS NULL
-GROUP BY l.id, l.kode, l.nama, EXTRACT(YEAR FROM s.tanggal_surat), EXTRACT(MONTH FROM s.tanggal_surat)
-ORDER BY tahun DESC, bulan DESC, l.nama;
-
--- Comments
-COMMENT ON VIEW v_statistik_surat IS 'Statistik surat per lembaga per bulan';
 
 -- ============================================================================
 -- 8. UTILITY FUNCTIONS
@@ -1013,7 +1007,6 @@ GRANT EXECUTE ON FUNCTION soft_delete_surat TO authenticated;
 
 -- Grant usage on views
 GRANT SELECT ON v_surat_lengkap TO authenticated;
-GRANT SELECT ON v_statistik_surat TO authenticated;
 
 -- ============================================================================
 -- 11. VERIFICATION QUERIES
@@ -1052,14 +1045,13 @@ AND routine_name IN (
 ORDER BY routine_name;
 
 -- Check if all views created
-SELECT 
+SELECT
   table_name,
   view_definition
 FROM information_schema.views
 WHERE table_schema = 'public'
 AND table_name IN (
-  'v_surat_lengkap',
-  'v_statistik_surat'
+  'v_surat_lengkap'
 )
 ORDER BY table_name;
 
@@ -1132,9 +1124,13 @@ SELECT 'user_profiles', COUNT(*) FROM user_profiles;
 - Data tidak benar-benar dihapus
 - Audit trail lengkap
 
-✅ **Views untuk Reporting**
-- `v_surat_lengkap` - data lengkap untuk export
-- `v_statistik_surat` - statistik per bulan
+✅ **Template Surat**
+- `template_id` + `template_data` JSONB di `surat_keluar`
+- Template registry berbasis kode (constants/template-registry.ts)
+- 6 template bawaan: keterangan-aktif, undangan, tugas, pemberitahuan, permohonan, umum
+
+✅ **View untuk Export**
+- `v_surat_lengkap` - data lengkap termasuk template data
 
 ---
 

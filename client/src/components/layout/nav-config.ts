@@ -1,10 +1,7 @@
 import {
-  LayoutDashboard,
   FileText,
   Building2,
   Users,
-  Settings,
-  BarChart3,
   type LucideIcon,
 } from "lucide-react";
 
@@ -22,11 +19,6 @@ export interface NavSection {
 
 export const staffNavItems: NavItem[] = [
   {
-    title: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
     title: "Surat Keluar",
     href: "/surat",
     icon: FileText,
@@ -40,19 +32,9 @@ export const staffNavItems: NavItem[] = [
 
 export const adminNavItems: NavItem[] = [
   {
-    title: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
     title: "Surat Keluar",
     href: "/surat",
     icon: FileText,
-  },
-  {
-    title: "Laporan",
-    href: "/laporan",
-    icon: BarChart3,
   },
 ];
 
@@ -67,12 +49,6 @@ export const adminManageItems: NavItem[] = [
     title: "Pengguna",
     href: "/admin/pengguna",
     icon: Users,
-    adminOnly: true,
-  },
-  {
-    title: "Pengaturan",
-    href: "/admin/pengaturan",
-    icon: Settings,
     adminOnly: true,
   },
 ];

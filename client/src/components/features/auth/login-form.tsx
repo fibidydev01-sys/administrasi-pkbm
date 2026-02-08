@@ -95,8 +95,8 @@ export function LoginForm() {
 
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Redirect to dashboard (same for all roles)
-      router.push("/dashboard");
+      // Redirect to surat (main page)
+      router.push("/surat");
       router.refresh();
 
     } catch (err) {
