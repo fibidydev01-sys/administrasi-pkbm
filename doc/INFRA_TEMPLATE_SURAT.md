@@ -427,22 +427,27 @@ Tidak ada field tambahan, tidak ada boilerplate. User mengisi semua dari nol. Te
 
 ## 5. ARSITEKTUR TEKNIS — TEMPLATE REGISTRY
 
-### 5.1 Konsep: Template Sebagai Data, Bukan Komponen
-
-Template **bukan** komponen React terpisah. Template adalah **objek konfigurasi** yang menginstruksikan form dan renderer bagaimana berperilaku.
+### 5.1 Prinsip Utama: 1 File, 1 Object, Selesai
 
 ```
-// Konsep alur:
+NAMBAH TEMPLATE BARU = TAMBAH 1 OBJECT DI ARRAY
 
-1. User pilih template dari dropdown
-2. Form membaca konfigurasi template
-3. Field tambahan muncul di form
-4. Default values terisi otomatis
-5. User lengkapi/edit
-6. Submit → data masuk ke surat_keluar seperti biasa
-7. Renderer membaca template_id dari data surat
-8. Body di-render sesuai struktur template
+Tidak perlu:
+  ✗ Buat komponen React baru
+  ✗ Edit form
+  ✗ Edit renderer
+  ✗ Edit dropdown
+  ✗ Tambah route
+  ✗ Migrasi database
+
+Cukup:
+  ✓ Buka constants/template-registry.ts
+  ✓ Copy-paste object template yang mirip
+  ✓ Edit isinya
+  ✓ Selesai — dropdown, form, renderer otomatis nge-pick
 ```
+
+**Kenapa bisa?** Karena template adalah **data (config object)**, bukan komponen. Form, dropdown, dan renderer membaca dari registry yang sama. Tambah entry di registry = semua otomatis menyesuaikan.
 
 ### 5.2 Struktur Data Template
 
@@ -457,7 +462,8 @@ type TemplateId =
   | "surat-tugas"
   | "surat-pemberitahuan"
   | "surat-permohonan"
-  | "surat-umum";
+  | "surat-umum"
+  | string;                  // ← extensible, tambah template baru tinggal tambah string
 
 type FieldType = "text" | "textarea" | "select" | "date";
 
@@ -471,13 +477,17 @@ interface TemplateField {
   defaultValue?: string;
 }
 
+// === BAGIAN INI YANG BIKIN NAMBAH TEMPLATE ENAK ===
+// Satu object = satu template lengkap
+// Form, dropdown, renderer SEMUA baca dari sini
+
 interface TemplateConfig {
   id: TemplateId;
   nama: string;              // nama tampilan di dropdown
   deskripsi: string;         // tooltip/hint singkat
   kategori: "keterangan" | "korespondensi" | "arahan" | "umum";
 
-  // Struktur surat
+  // Struktur surat — menentukan rendering
   struktur: {
     judulTengah?: string;    // "SURAT KETERANGAN" — jika ada, render centered bold
     pakaiKepada: boolean;    // true = ada blok "Kepada Yth.", false = langsung body
@@ -486,7 +496,7 @@ interface TemplateConfig {
     penutup: string;         // teks penutup PATEN
   };
 
-  // Default values untuk field standar
+  // Default values untuk field standar — auto-fill saat template dipilih
   defaults: {
     perihal?: string;
     sifat?: SuratSifat;
@@ -494,13 +504,23 @@ interface TemplateConfig {
   };
 
   // Field tambahan khusus template ini
+  // Form otomatis render input untuk setiap field di array ini
   fields: TemplateField[];
 
-  // Fungsi komposisi: cara merangkai body surat dari fields
-  // Ini menentukan bagaimana data dari fields disusun menjadi isi_surat
+  // Cara merangkai body surat dari fields
   bodyComposer: "structured" | "freeform";
   // "structured" = body dirangkai otomatis dari fields (Surat Keterangan, Surat Tugas)
   // "freeform"   = body dari textarea isi_surat biasa (Surat Undangan, Pemberitahuan)
+
+  // Blok data terstruktur (tabel "Nama: ..., Jabatan: ...", dll)
+  // Renderer otomatis generate tabel dari array ini
+  dataBlocks?: {
+    label: string;           // "Yang bertanda tangan di bawah ini:"
+    // source: dari mana data diambil
+    source: "lembaga" | "input";
+    // fields: field mana yang ditampilkan di blok ini
+    fieldNames: string[];    // ["nama_peserta", "ttl_peserta", "nisn", ...]
+  }[];
 }
 ```
 
@@ -958,43 +978,363 @@ Naskah Dinas
 
 ---
 
-## 11. URUTAN IMPLEMENTASI
+## 11. PANDUAN NAMBAH TEMPLATE BARU
+
+**Ini section terpenting.** Kalau DX nambah template tidak enak, arsitektur ini gagal.
+
+### 11.1 Aturan Main
+
+```
+ATURAN #1:  Nambah template = HANYA edit 1 file
+            → constants/template-registry.ts
+
+ATURAN #2:  Tidak boleh sentuh form, renderer, atau dropdown
+            → Semua sudah data-driven dari registry
+
+ATURAN #3:  Tidak perlu migrasi database
+            → template_data pakai JSONB, schema-less
+
+ATURAN #4:  Copy-paste friendly
+            → Copy template yang mirip, ubah isinya
+```
+
+### 11.2 Step-by-Step: Contoh Tambah "Surat Rekomendasi"
+
+**Skenario:** Tim administrasi butuh template Surat Rekomendasi untuk peserta didik.
+
+#### STEP 1 — Buka `constants/template-registry.ts`
+
+File ini berisi array `TEMPLATE_REGISTRY`. Cari template yang paling mirip untuk di-copy.
+
+Surat Rekomendasi mirip Surat Keterangan (ada judul tengah, data block, tidak pakai "Kepada Yth.").
+
+#### STEP 2 — Copy-paste, edit
+
+```typescript
+// constants/template-registry.ts
+
+// ... template lainnya ...
+
+{
+  id: "surat-rekomendasi",                          // ← ID unik
+  nama: "Surat Rekomendasi",                        // ← muncul di dropdown
+  deskripsi: "Rekomendasi peserta didik untuk beasiswa/institusi lain",
+  kategori: "keterangan",
+
+  struktur: {
+    judulTengah: "SURAT REKOMENDASI",               // ← judul tengah bold
+    pakaiKepada: false,                              // ← tidak pakai "Kepada Yth."
+    pakaiTembusan: false,
+    pembuka: "Yang bertanda tangan di bawah ini:",
+    penutup:
+      "Demikian surat rekomendasi ini dibuat dengan sebenarnya "
+      + "untuk dapat dipergunakan sebagaimana mestinya.",
+  },
+
+  defaults: {
+    perihal: "Surat Rekomendasi",
+    sifat: "Biasa",
+    lampiran: "-",
+  },
+
+  fields: [                                          // ← field yang muncul di form
+    {
+      name: "nama_peserta",
+      label: "Nama Peserta Didik",
+      type: "text",
+      required: true,
+      placeholder: "Contoh: Siti Nurhaliza",
+    },
+    {
+      name: "ttl_peserta",
+      label: "Tempat, Tanggal Lahir",
+      type: "text",
+      required: true,
+      placeholder: "Contoh: Jakarta, 20 Mei 2003",
+    },
+    {
+      name: "program_paket",
+      label: "Program",
+      type: "select",
+      required: true,
+      options: ["Paket A", "Paket B", "Paket C"],
+    },
+    {
+      name: "rekomendasi_untuk",
+      label: "Direkomendasikan Untuk",
+      type: "text",
+      required: true,
+      placeholder: "Contoh: mendaftar beasiswa Bidikmisi",
+    },
+    {
+      name: "alasan_rekomendasi",
+      label: "Alasan Rekomendasi",
+      type: "textarea",
+      required: true,
+      placeholder: "Contoh: Yang bersangkutan memiliki prestasi akademik yang baik...",
+    },
+  ],
+
+  bodyComposer: "structured",
+
+  dataBlocks: [
+    {
+      label: "Yang bertanda tangan di bawah ini:",
+      source: "lembaga",
+      fieldNames: [],                                // otomatis ambil ttd_nama, ttd_jabatan
+    },
+    {
+      label: "Memberikan rekomendasi kepada:",
+      source: "input",
+      fieldNames: ["nama_peserta", "ttl_peserta", "program_paket"],
+    },
+  ],
+},
+```
+
+#### STEP 3 — Selesai. Tidak ada step 3.
+
+```
+Yang terjadi otomatis setelah tambah object di atas:
+
+✓ Dropdown "Pilih Template" → muncul "Surat Rekomendasi"
+✓ Form → field Nama, TTL, Program, Direkomendasikan Untuk, Alasan muncul
+✓ Default perihal → "Surat Rekomendasi" terisi otomatis
+✓ Renderer → judul tengah "SURAT REKOMENDASI" + data block
+✓ Penutup → teks standar otomatis
+✓ Database → template_data JSONB menyimpan semua field
+```
+
+### 11.3 Kenapa Bisa Otomatis?
+
+Karena semua komponen **membaca dari registry yang sama**:
+
+```
+constants/template-registry.ts
+        │
+        │  TEMPLATE_REGISTRY (array of TemplateConfig)
+        │
+        ├──→ template-selector.tsx
+        │       TEMPLATE_REGISTRY.map(t => <option>{t.nama}</option>)
+        │       Dropdown otomatis punya semua template
+        │
+        ├──→ template-fields.tsx
+        │       const template = TEMPLATE_REGISTRY.find(t => t.id === selectedId)
+        │       template.fields.map(f => <Input label={f.label} ... />)
+        │       Field otomatis muncul sesuai template
+        │
+        ├──→ surat-form.tsx
+        │       template.defaults → auto-fill perihal, sifat, lampiran
+        │       template.struktur.pakaiKepada → show/hide field "Kepada"
+        │       Tidak perlu if/else per template
+        │
+        ├──→ template-composer.ts
+        │       template.bodyComposer === "structured"
+        │         → compose body dari template.dataBlocks + template_data
+        │       template.bodyComposer === "freeform"
+        │         → pakai isi_surat langsung
+        │
+        └──→ surat-body.tsx / surat-renderer.tsx
+                template.struktur.judulTengah → render <h2> centered
+                template.struktur.pembuka → render pembuka
+                template.dataBlocks → render tabel data
+                template.struktur.penutup → render penutup
+```
+
+**Tidak ada `switch/case` atau `if (templateId === "xxx")` di komponen manapun.** Semua data-driven.
+
+### 11.4 Checklist "Apakah Template Baru Saya Sudah Benar?"
+
+Sebelum commit, cek:
+
+```
+□  id unik? (tidak duplikat dengan template lain)
+□  nama jelas? (yang muncul di dropdown)
+□  struktur.pembuka sesuai standar ANRI?
+□  struktur.penutup sesuai standar ANRI?
+□  fields — setiap field punya name unik dalam template ini?
+□  fields — type benar? (text/textarea/select/date)
+□  fields — kalau select, options diisi?
+□  defaults.perihal masuk akal?
+□  bodyComposer sesuai? (structured kalau body dirangkai, freeform kalau body bebas)
+□  dataBlocks (jika ada) — fieldNames cocok dengan names di fields?
+```
+
+### 11.5 Template yang TIDAK Bisa Ditangani Sistem Ini
+
+Beberapa jenis surat terlalu kompleks untuk config-driven:
+
+| Jenis Surat | Kenapa Tidak Bisa | Solusi |
+|-------------|-------------------|--------|
+| Surat Keputusan (SK) | Punya bagian "Menimbang", "Mengingat", "Memutuskan" dengan format diktum khusus | Butuh komponen renderer tersendiri (post-MVP) |
+| Berita Acara | Multi-section dengan format naratif + tabel kehadiran | Butuh layout khusus (post-MVP) |
+| Perjanjian Kerjasama | Multi-halaman, pasal-pasal bernomor | Beda paradigma, bukan surat biasa |
+
+Untuk MVP, 6 template + extensibility via registry sudah cukup.
+
+### 11.6 Ilustrasi: Registry Lengkap (Gambaran Akhir)
+
+```typescript
+// constants/template-registry.ts
+// Ilustrasi — BUKAN kode implementasi
+
+export const TEMPLATE_REGISTRY: TemplateConfig[] = [
+  // ──────────────────────────────────────
+  // 1. Surat Keterangan Aktif
+  // ──────────────────────────────────────
+  {
+    id: "surat-keterangan-aktif",
+    nama: "Surat Keterangan Aktif",
+    // ... (detail di section 5.3)
+  },
+
+  // ──────────────────────────────────────
+  // 2. Surat Undangan
+  // ──────────────────────────────────────
+  {
+    id: "surat-undangan",
+    nama: "Surat Undangan",
+    // ... (detail di section 5.4)
+  },
+
+  // ──────────────────────────────────────
+  // 3. Surat Tugas
+  // ──────────────────────────────────────
+  {
+    id: "surat-tugas",
+    nama: "Surat Tugas",
+    // ... (detail di section 4.3)
+  },
+
+  // ──────────────────────────────────────
+  // 4. Surat Pemberitahuan
+  // ──────────────────────────────────────
+  {
+    id: "surat-pemberitahuan",
+    nama: "Surat Pemberitahuan",
+    // ... (detail di section 4.4)
+  },
+
+  // ──────────────────────────────────────
+  // 5. Surat Permohonan
+  // ──────────────────────────────────────
+  {
+    id: "surat-permohonan",
+    nama: "Surat Permohonan",
+    // ... (detail di section 4.5)
+  },
+
+  // ──────────────────────────────────────
+  // 6. Surat Umum (default — selalu terakhir)
+  // ──────────────────────────────────────
+  {
+    id: "surat-umum",
+    nama: "Surat Umum",
+    deskripsi: "Template kosong, isi semua manual",
+    kategori: "umum",
+    struktur: {
+      pakaiKepada: true,
+      pakaiTembusan: true,
+      pembuka: "Dengan hormat,",
+      penutup: "Demikian surat ini kami sampaikan. Atas perhatian dan kerjasamanya kami ucapkan terima kasih.",
+    },
+    defaults: {},
+    fields: [],              // ← kosong, tidak ada field tambahan
+    bodyComposer: "freeform",
+  },
+
+  // ──────────────────────────────────────
+  // NAMBAH TEMPLATE BARU? TARUH DI SINI ↓
+  // Copy salah satu di atas, ubah isinya
+  // ──────────────────────────────────────
+];
+
+// Helper functions — dipakai oleh form, renderer, composer
+export function getTemplate(id: string): TemplateConfig {
+  return TEMPLATE_REGISTRY.find(t => t.id === id) ?? TEMPLATE_REGISTRY.at(-1)!;
+}
+
+export function getTemplateOptions() {
+  return TEMPLATE_REGISTRY.map(t => ({ value: t.id, label: t.nama }));
+}
+```
+
+### 11.7 Ringkasan DX
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                                                          │
+│   MAU NAMBAH TEMPLATE?                                   │
+│                                                          │
+│   1. Buka constants/template-registry.ts                 │
+│   2. Copy object template yang mirip                     │
+│   3. Paste di akhir array (sebelum Surat Umum)           │
+│   4. Edit: id, nama, fields, defaults, struktur          │
+│   5. Save                                                │
+│   6. Done — dropdown, form, renderer otomatis            │
+│                                                          │
+│   File yang disentuh: 1                                  │
+│   Komponen yang diubah: 0                                │
+│   Database migration: 0                                  │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 12. URUTAN IMPLEMENTASI
 
 ```
 TAHAP 1: Fondasi (types + registry)
 ├── 1.1  Buat types/template.ts
 ├── 1.2  Buat constants/template-registry.ts (semua 6 template)
+│        → INI file utama. Semua template hardcode di sini.
+│        → Helper: getTemplate(), getTemplateOptions()
 └── 1.3  Update types/index.ts (export + update SuratFormData)
 
 TAHAP 2: Database
 ├── 2.1  ALTER TABLE surat_keluar (tambah template_id, template_data)
 └── 2.2  Update types/database.ts (tambah kolom baru)
 
-TAHAP 3: Form
-├── 3.1  Buat template-selector.tsx (dropdown)
-├── 3.2  Buat template-fields.tsx (render field dinamis)
+TAHAP 3: Form (data-driven, baca registry)
+├── 3.1  Buat template-selector.tsx
+│        → getTemplateOptions() → render dropdown
+│        → Tidak perlu hardcode option per template
+├── 3.2  Buat template-fields.tsx
+│        → getTemplate(id).fields.map() → render input
+│        → Tidak perlu if/else per template
 ├── 3.3  Update surat-form.tsx (integrasikan selector + fields)
+│        → getTemplate(id).defaults → auto-fill
+│        → getTemplate(id).struktur.pakaiKepada → show/hide
 └── 3.4  Update validators.ts (validasi field template)
+         → getTemplate(id).fields.filter(f => f.required) → dynamic validation
 
-TAHAP 4: Composer
+TAHAP 4: Composer (data-driven, baca registry)
 ├── 4.1  Buat lib/template-composer.ts
-└── 4.2  Fungsi compose per bodyComposer type
+│        → getTemplate(id).bodyComposer → pilih strategi compose
+│        → getTemplate(id).dataBlocks → generate data table
+└── 4.2  Tidak perlu fungsi per-template, 1 fungsi generik cukup
 
-TAHAP 5: Renderer
+TAHAP 5: Renderer (data-driven, baca registry)
 ├── 5.1  Update surat-renderer.tsx (baca template_id)
-├── 5.2  Update surat-body.tsx (support structured body)
-└── 5.3  Buat blok render per template (judul tengah, data block)
+├── 5.2  Update surat-body.tsx
+│        → getTemplate(id).struktur.judulTengah → render atau skip
+│        → getTemplate(id).struktur.pembuka → render
+│        → getTemplate(id).dataBlocks → render tabel data
+│        → getTemplate(id).struktur.penutup → render
+└── 5.3  Tidak perlu komponen renderer per template
 
 TAHAP 6: Verifikasi
 ├── 6.1  Test buat surat per template
 ├── 6.2  Test edit surat (load template_data)
 ├── 6.3  Test preview/print sesuai standar ANRI
-└── 6.4  Test ganti template di form
+├── 6.4  Test ganti template di form
+└── 6.5  Test tambah template baru (cek DX: cukup 1 file?)
 ```
 
 ---
 
-## 12. REFERENSI
+## 13. REFERENSI
 
 - **Peraturan ANRI No. 5 Tahun 2021** — Pedoman Umum Tata Naskah Dinas
 - **Permendagri No. 1 Tahun 2023** — Tata Naskah Dinas Pemerintah Daerah
