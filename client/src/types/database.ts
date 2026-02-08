@@ -88,6 +88,8 @@ export interface Database {
           pdf_url: string | null;
           pdf_generated_at: string | null;
           status: string;
+          template_id: string | null;
+          template_data: Json | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -111,6 +113,8 @@ export interface Database {
           pdf_url?: string | null;
           pdf_generated_at?: string | null;
           status?: string;
+          template_id?: string | null;
+          template_data?: Json | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -134,6 +138,8 @@ export interface Database {
           pdf_url?: string | null;
           pdf_generated_at?: string | null;
           status?: string;
+          template_id?: string | null;
+          template_data?: Json | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;

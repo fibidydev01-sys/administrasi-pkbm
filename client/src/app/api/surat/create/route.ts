@@ -25,12 +25,14 @@ export async function POST(request: NextRequest) {
       sifat,
       tanggal_surat,
       tembusan,
+      template_id,
+      template_data,
     } = body;
 
     // Validate required fields
-    if (!lembaga_id || !perihal || !kepada || !isi_surat) {
+    if (!lembaga_id || !perihal) {
       return NextResponse.json(
-        { error: "Field lembaga, perihal, kepada, dan isi surat wajib diisi" },
+        { error: "Field lembaga dan perihal wajib diisi" },
         { status: 400 }
       );
     }
@@ -41,8 +43,8 @@ export async function POST(request: NextRequest) {
       {
         p_lembaga_id: lembaga_id,
         p_perihal: perihal,
-        p_kepada: kepada,
-        p_isi_surat: isi_surat,
+        p_kepada: kepada || "-",
+        p_isi_surat: isi_surat || "",
         p_tanggal_surat:
           tanggal_surat || new Date().toISOString().split("T")[0],
         p_alamat_tujuan: alamat_tujuan || null,
@@ -58,6 +60,21 @@ export async function POST(request: NextRequest) {
         { error: createError.message },
         { status: 500 }
       );
+    }
+
+    // Update template_id and template_data if provided
+    if (template_id && template_id !== "surat-umum") {
+      const { error: templateError } = await supabase
+        .from("surat_keluar")
+        .update({
+          template_id: template_id,
+          template_data: template_data || {},
+        })
+        .eq("id", suratId);
+
+      if (templateError) {
+        console.error("Error saving template data:", templateError);
+      }
     }
 
     // Insert tembusan (if any)

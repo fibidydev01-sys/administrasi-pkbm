@@ -3,13 +3,14 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
 
-import { suratSchema, type SuratFormData } from "@/lib/validators";
+import { suratSchema, type SuratFormData, validateTemplateFields } from "@/lib/validators";
 import { useSurat, useLembagaList } from "@/hooks";
-import { SURAT_SIFAT_OPTIONS, ROUTES } from "@/constants";
+import { SURAT_SIFAT_OPTIONS, ROUTES, getTemplate } from "@/constants";
 import { getToday } from "@/lib/date";
+import type { SuratSifat } from "@/types";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import TembusanInput from "./tembusan-input";
+import TemplateSelector from "./template-selector";
+import TemplateFields from "./template-fields";
 
 interface SuratFormProps {
   mode: "create" | "edit";
@@ -35,6 +38,7 @@ interface SuratFormProps {
 export default function SuratForm({ mode, suratId, defaultValues }: SuratFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [templateFieldErrors, setTemplateFieldErrors] = useState<Record<string, string>>({});
   const { createSurat, updateSurat } = useSurat(suratId);
   const { lembagas, loading: lembagaLoading } = useLembagaList();
 
@@ -56,13 +60,102 @@ export default function SuratForm({ mode, suratId, defaultValues }: SuratFormPro
       sifat: "Biasa",
       tanggal_surat: getToday(),
       tembusan: [],
+      template_id: "surat-umum",
+      template_data: {},
       ...defaultValues,
     },
   });
 
   const tembusanValue = watch("tembusan") ?? [];
+  const templateId = watch("template_id") ?? "surat-umum";
+  const templateData = watch("template_data") ?? {};
+  const currentTemplate = getTemplate(templateId);
+
+  /**
+   * Handle template change: apply defaults, reset template_data, confirm if switching.
+   */
+  const handleTemplateChange = useCallback(
+    (newTemplateId: string) => {
+      const hasExistingData = Object.values(templateData).some((v) => v && v.trim() !== "");
+
+      if (hasExistingData && newTemplateId !== templateId) {
+        const confirmed = window.confirm(
+          "Ganti template? Data field template sebelumnya akan direset."
+        );
+        if (!confirmed) return;
+      }
+
+      const newTemplate = getTemplate(newTemplateId);
+
+      // Set template_id
+      setValue("template_id", newTemplateId);
+
+      // Reset template_data
+      setValue("template_data", {});
+      setTemplateFieldErrors({});
+
+      // Apply defaults
+      if (newTemplate.defaults.perihal) {
+        setValue("perihal", newTemplate.defaults.perihal, { shouldValidate: true });
+      }
+      if (newTemplate.defaults.sifat) {
+        setValue("sifat", newTemplate.defaults.sifat, { shouldValidate: true });
+      }
+      if (newTemplate.defaults.lampiran) {
+        setValue("lampiran", newTemplate.defaults.lampiran);
+      }
+
+      // For templates that don't use "Kepada", set a default or clear
+      if (!newTemplate.struktur.pakaiKepada) {
+        setValue("kepada", "-");
+      } else {
+        // Only clear if currently set to the placeholder
+        const currentKepada = watch("kepada");
+        if (currentKepada === "-") {
+          setValue("kepada", "");
+        }
+      }
+
+      // For structured templates, isi_surat is composed automatically
+      if (newTemplate.bodyComposer === "structured") {
+        setValue("isi_surat", "");
+      }
+    },
+    [templateId, templateData, setValue, watch]
+  );
+
+  /**
+   * Handle template field value change.
+   */
+  const handleTemplateFieldChange = useCallback(
+    (fieldName: string, value: string) => {
+      const current = watch("template_data") ?? {};
+      setValue("template_data", { ...current, [fieldName]: value });
+
+      // Clear error for this field
+      if (templateFieldErrors[fieldName]) {
+        setTemplateFieldErrors((prev) => {
+          const next = { ...prev };
+          delete next[fieldName];
+          return next;
+        });
+      }
+    },
+    [setValue, watch, templateFieldErrors]
+  );
 
   async function onSubmit(data: SuratFormData) {
+    // Validate template-specific required fields
+    const tplErrors = validateTemplateFields(
+      data.template_id ?? "surat-umum",
+      data.template_data ?? {}
+    );
+    if (Object.keys(tplErrors).length > 0) {
+      setTemplateFieldErrors(tplErrors);
+      toast.error("Lengkapi semua field template yang wajib diisi");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
 
@@ -121,6 +214,22 @@ export default function SuratForm({ mode, suratId, defaultValues }: SuratFormPro
             )}
           </div>
 
+          {/* Template Selector */}
+          <TemplateSelector
+            value={templateId}
+            onChange={handleTemplateChange}
+          />
+
+          {/* Template Dynamic Fields */}
+          {currentTemplate.fields.length > 0 && (
+            <TemplateFields
+              templateId={templateId}
+              templateData={templateData}
+              onChange={handleTemplateFieldChange}
+              errors={templateFieldErrors}
+            />
+          )}
+
           {/* Perihal */}
           <div className="space-y-2">
             <Label htmlFor="perihal">Perihal *</Label>
@@ -130,24 +239,28 @@ export default function SuratForm({ mode, suratId, defaultValues }: SuratFormPro
             )}
           </div>
 
-          {/* Kepada */}
-          <div className="space-y-2">
-            <Label htmlFor="kepada">Kepada (Tujuan) *</Label>
-            <Input id="kepada" {...register("kepada")} placeholder="Nama penerima surat" />
-            {errors.kepada && (
-              <p className="text-sm text-destructive">{errors.kepada.message}</p>
-            )}
-          </div>
+          {/* Kepada — only show if template uses it */}
+          {currentTemplate.struktur.pakaiKepada && (
+            <div className="space-y-2">
+              <Label htmlFor="kepada">Kepada (Tujuan)</Label>
+              <Input id="kepada" {...register("kepada")} placeholder="Nama penerima surat" />
+              {errors.kepada && (
+                <p className="text-sm text-destructive">{errors.kepada.message}</p>
+              )}
+            </div>
+          )}
 
-          {/* Alamat Tujuan */}
-          <div className="space-y-2">
-            <Label htmlFor="alamat_tujuan">Alamat Tujuan</Label>
-            <Input
-              id="alamat_tujuan"
-              {...register("alamat_tujuan")}
-              placeholder="Alamat tujuan surat"
-            />
-          </div>
+          {/* Alamat Tujuan — only show if template uses "Kepada" */}
+          {currentTemplate.struktur.pakaiKepada && (
+            <div className="space-y-2">
+              <Label htmlFor="alamat_tujuan">Alamat Tujuan</Label>
+              <Input
+                id="alamat_tujuan"
+                {...register("alamat_tujuan")}
+                placeholder="Alamat tujuan surat"
+              />
+            </div>
+          )}
 
           {/* Tanggal Surat */}
           <div className="space-y-2">
@@ -161,7 +274,7 @@ export default function SuratForm({ mode, suratId, defaultValues }: SuratFormPro
             <Select
               value={watch("sifat")}
               onValueChange={(val) =>
-                setValue("sifat", val as SuratFormData["sifat"], { shouldValidate: true })
+                setValue("sifat", val as SuratSifat, { shouldValidate: true })
               }
             >
               <SelectTrigger>
@@ -183,28 +296,32 @@ export default function SuratForm({ mode, suratId, defaultValues }: SuratFormPro
             <Input id="lampiran" {...register("lampiran")} placeholder="Keterangan lampiran" />
           </div>
 
-          {/* Isi Surat */}
-          <div className="space-y-2">
-            <Label htmlFor="isi_surat">Isi Surat *</Label>
-            <Textarea
-              id="isi_surat"
-              {...register("isi_surat")}
-              placeholder="Tuliskan isi surat..."
-              rows={10}
-            />
-            {errors.isi_surat && (
-              <p className="text-sm text-destructive">{errors.isi_surat.message}</p>
-            )}
-          </div>
+          {/* Isi Surat — only show for freeform templates */}
+          {currentTemplate.bodyComposer === "freeform" && (
+            <div className="space-y-2">
+              <Label htmlFor="isi_surat">Isi Surat</Label>
+              <Textarea
+                id="isi_surat"
+                {...register("isi_surat")}
+                placeholder="Tuliskan isi surat..."
+                rows={10}
+              />
+              {errors.isi_surat && (
+                <p className="text-sm text-destructive">{errors.isi_surat.message}</p>
+              )}
+            </div>
+          )}
 
-          {/* Tembusan */}
-          <div className="space-y-2">
-            <Label>Tembusan</Label>
-            <TembusanInput
-              value={tembusanValue}
-              onChange={(val) => setValue("tembusan", val)}
-            />
-          </div>
+          {/* Tembusan — only show if template supports it */}
+          {currentTemplate.struktur.pakaiTembusan && (
+            <div className="space-y-2">
+              <Label>Tembusan</Label>
+              <TembusanInput
+                value={tembusanValue}
+                onChange={(val) => setValue("tembusan", val)}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 

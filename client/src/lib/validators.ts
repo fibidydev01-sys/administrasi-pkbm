@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getTemplate } from "@/constants/template-registry";
 
 // =============================================
 // Auth Validators
@@ -18,16 +19,45 @@ export type LoginFormData = z.infer<typeof loginSchema>;
 export const suratSchema = z.object({
   lembaga_id: z.string().min(1, "Lembaga wajib dipilih"),
   perihal: z.string().min(1, "Perihal wajib diisi").max(500, "Perihal maksimal 500 karakter"),
-  kepada: z.string().min(1, "Tujuan wajib diisi").max(500, "Tujuan maksimal 500 karakter"),
+  kepada: z.string().max(500, "Tujuan maksimal 500 karakter").optional().or(z.literal("")),
   alamat_tujuan: z.string().max(500, "Alamat tujuan maksimal 500 karakter").optional().or(z.literal("")),
-  isi_surat: z.string().min(1, "Isi surat wajib diisi"),
+  isi_surat: z.string().optional().or(z.literal("")),
   lampiran: z.string().max(200, "Lampiran maksimal 200 karakter").optional().or(z.literal("")),
-  sifat: z.enum(["Biasa", "Penting", "Segera", "Rahasia"]).default("Biasa"),
+  sifat: z.enum(["Biasa", "Penting", "Segera", "Rahasia"]).optional(),
   tanggal_surat: z.string().optional(),
-  tembusan: z.array(z.string().min(1, "Nama penerima tembusan wajib diisi")).optional().default([]),
+  tembusan: z.array(z.string().min(1, "Nama penerima tembusan wajib diisi")).optional(),
+  template_id: z.string().optional(),
+  template_data: z.record(z.string(), z.string()).optional(),
 });
 
 export type SuratFormData = z.infer<typeof suratSchema>;
+
+// =============================================
+// Template Field Validators
+// =============================================
+
+/**
+ * Validate template-specific required fields.
+ * Returns an object of field errors { fieldName: errorMessage }.
+ */
+export function validateTemplateFields(
+  templateId: string,
+  templateData: Record<string, string>
+): Record<string, string> {
+  const template = getTemplate(templateId);
+  const errors: Record<string, string> = {};
+
+  for (const field of template.fields) {
+    if (field.required) {
+      const value = templateData[field.name];
+      if (!value || value.trim() === "") {
+        errors[field.name] = `${field.label} wajib diisi`;
+      }
+    }
+  }
+
+  return errors;
+}
 
 // =============================================
 // Lembaga Validators

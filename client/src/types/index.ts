@@ -11,6 +11,17 @@ export type {
   Json,
 } from "./database";
 
+export type {
+  TemplateId,
+  FieldType,
+  TemplateField,
+  TemplateKategori,
+  TemplateStruktur,
+  TemplateDataBlock,
+  TemplateConfig,
+  TemplateData,
+} from "./template";
+
 import type { Tables, InsertDto, UpdateDto } from "./database";
 
 // =============================================
@@ -120,12 +131,14 @@ export interface SelectOption {
 export type SuratFormData = {
   lembaga_id: string;
   perihal: string;
-  kepada: string;
+  kepada?: string;
   alamat_tujuan?: string;
-  isi_surat: string;
+  isi_surat?: string;
   lampiran?: string;
-  sifat: SuratSifat;
-  tembusan: string[];
+  sifat?: SuratSifat;
+  tembusan?: string[];
+  template_id?: string;
+  template_data?: Record<string, string>;
 };
 
 // =============================================

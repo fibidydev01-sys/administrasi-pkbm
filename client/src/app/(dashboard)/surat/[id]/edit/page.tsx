@@ -39,6 +39,8 @@ export default function EditSuratPage({ params }: { params: Promise<{ id: string
           lampiran: surat.lampiran ?? "",
           sifat: surat.sifat as "Biasa" | "Penting" | "Segera" | "Rahasia",
           tembusan: surat.tembusan?.map((t) => t.nama_penerima) ?? [],
+          template_id: surat.template_id ?? "surat-umum",
+          template_data: (surat.template_data as Record<string, string>) ?? {},
         }}
       />
     </div>

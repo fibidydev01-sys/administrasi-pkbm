@@ -15,3 +15,8 @@ export {
   DEFAULT_PAPER_SIZE,
 } from "./paper-config";
 export type { PaperSize } from "./paper-config";
+export {
+  TEMPLATE_REGISTRY,
+  getTemplate,
+  getTemplateOptions,
+} from "./template-registry";
