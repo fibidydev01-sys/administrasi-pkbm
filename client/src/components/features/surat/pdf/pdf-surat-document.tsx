@@ -1,5 +1,5 @@
 import { Document, Page, View, Text, Image } from "@react-pdf/renderer";
-import type { SuratWithRelations, SnapshotTTD, Tembusan, BodyPart, TemplateData, SuratTemplateField } from "@/types";
+import type { SuratWithRelations, SnapshotTTD, Tembusan } from "@/types";
 import type { PaperSize } from "@/constants";
 import { PAPER_SIZE, DEFAULT_PAPER_SIZE } from "@/constants";
 import { formatTanggalSurat } from "@/lib/date";
@@ -116,58 +116,9 @@ function PdfTujuanBlock({ surat }: { surat: SuratWithRelations }) {
   );
 }
 
-// === BODY (with template support) ===
-function PdfSuratBody({ surat }: { surat: SuratWithRelations }) {
-  const hasTemplate = !!surat.template_id;
-  const templateData = surat.template_data as unknown as TemplateData | null;
-  const template = surat.template;
-
-  // If surat uses a template with body_parts, render structured content
-  if (hasTemplate && template && templateData) {
-    const bodyParts = template.body_parts as unknown as BodyPart[];
-    const fields = (template as unknown as { fields?: SuratTemplateField[] }).fields ?? [];
-
-    return (
-      <View style={s.bodyContainer}>
-        {bodyParts.map((part, partIdx) => {
-          if (part.type === "text") {
-            const lines = part.value.split("\n").filter((l) => l.trim());
-            return lines.map((line, lineIdx) => (
-              <Text
-                key={`${partIdx}-${lineIdx}`}
-                style={partIdx === 0 && lineIdx === 0 ? s.bodyParagraph : s.bodyContent}
-              >
-                {line}
-              </Text>
-            ));
-          }
-          if (part.type === "field_group") {
-            const sectionFields = fields
-              .filter((f) => f.section === part.section)
-              .sort((a, b) => a.urutan - b.urutan);
-
-            return (
-              <View key={partIdx} style={s.fieldGroupContainer}>
-                {sectionFields.map((field) => (
-                  <View key={field.id} style={s.fieldRow}>
-                    <Text style={s.fieldLabel}>{field.label}</Text>
-                    <Text style={s.fieldColon}>:</Text>
-                    <Text style={s.fieldValue}>
-                      {templateData[field.nama_field] || field.default_value || "-"}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            );
-          }
-          return null;
-        })}
-      </View>
-    );
-  }
-
-  // Fallback: render isi_surat as plain text with standard pembuka/penutup
-  const paragraphs = parseHtmlToParagraphs(surat.isi_surat);
+// === BODY ===
+function PdfSuratBody({ isiSurat }: { isiSurat: string }) {
+  const paragraphs = parseHtmlToParagraphs(isiSurat);
 
   return (
     <View style={s.bodyContainer}>
@@ -258,7 +209,7 @@ export default function PDFSuratDocument({
         <PdfKopSurat surat={surat} />
         <PdfSuratMeta surat={surat} />
         <PdfTujuanBlock surat={surat} />
-        <PdfSuratBody surat={surat} />
+        <PdfSuratBody isiSurat={surat.isi_surat} />
         <PdfSignatureBlock surat={surat} />
         {surat.tembusan && surat.tembusan.length > 0 && (
           <PdfTembusanList tembusan={surat.tembusan} />

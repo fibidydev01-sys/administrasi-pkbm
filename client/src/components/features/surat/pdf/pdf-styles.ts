@@ -111,26 +111,6 @@ export const pdfStyles = StyleSheet.create({
     textIndent: 35,
   },
 
-  // === FIELD GROUP (for template body_parts) ===
-  fieldGroupContainer: {
-    marginTop: "3mm",
-    marginBottom: "3mm",
-    paddingLeft: 35, // match indent
-  },
-  fieldRow: {
-    flexDirection: "row",
-    marginBottom: 2,
-  },
-  fieldLabel: {
-    width: 120,
-  },
-  fieldColon: {
-    width: 10,
-  },
-  fieldValue: {
-    flex: 1,
-  },
-
   // === SIGNATURE ===
   signatureContainer: {
     marginTop: "10mm",

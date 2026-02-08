@@ -28,13 +28,6 @@ export type SuratUpdate = UpdateDto<"surat_keluar">;
 export type Tembusan = Tables<"surat_tembusan">;
 export type TembusanInsert = InsertDto<"surat_tembusan">;
 
-export type SuratTemplate = Tables<"surat_templates">;
-export type SuratTemplateInsert = InsertDto<"surat_templates">;
-export type SuratTemplateUpdate = UpdateDto<"surat_templates">;
-
-export type SuratTemplateField = Tables<"surat_template_fields">;
-export type SuratTemplateFieldInsert = InsertDto<"surat_template_fields">;
-
 export type UserProfile = Tables<"user_profiles">;
 export type UserProfileInsert = InsertDto<"user_profiles">;
 export type UserProfileUpdate = UpdateDto<"user_profiles">;
@@ -90,37 +83,11 @@ export type SnapshotTTD = {
 export interface SuratWithRelations extends Surat {
   lembaga: Lembaga;
   tembusan: Tembusan[];
-  template?: SuratTemplate | null;
   created_by_profile?: {
     full_name: string;
     role: string;
   };
 }
-
-// =============================================
-// Template Types
-// =============================================
-
-export type BodyPartText = {
-  type: "text";
-  value: string;
-};
-
-export type BodyPartFieldGroup = {
-  type: "field_group";
-  section: string;
-};
-
-export type BodyPart = BodyPartText | BodyPartFieldGroup;
-
-export type TemplateFieldType = "text" | "textarea" | "date" | "number" | "select";
-
-export interface SuratTemplateWithFields extends SuratTemplate {
-  fields: SuratTemplateField[];
-  lembaga?: Lembaga | null;
-}
-
-export type TemplateData = Record<string, string>;
 
 // =============================================
 // Auth Types
@@ -159,8 +126,6 @@ export type SuratFormData = {
   lampiran?: string;
   sifat: SuratSifat;
   tembusan: string[];
-  template_id?: string;
-  template_data?: TemplateData;
 };
 
 // =============================================

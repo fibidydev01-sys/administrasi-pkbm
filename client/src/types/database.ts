@@ -88,8 +88,6 @@ export interface Database {
           pdf_url: string | null;
           pdf_generated_at: string | null;
           status: string;
-          template_id: string | null;
-          template_data: Json | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -113,8 +111,6 @@ export interface Database {
           pdf_url?: string | null;
           pdf_generated_at?: string | null;
           status?: string;
-          template_id?: string | null;
-          template_data?: Json | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -138,8 +134,6 @@ export interface Database {
           pdf_url?: string | null;
           pdf_generated_at?: string | null;
           status?: string;
-          template_id?: string | null;
-          template_data?: Json | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -278,108 +272,6 @@ export interface Database {
         };
         Relationships: [];
       };
-
-      surat_templates: {
-        Row: {
-          id: string;
-          nama: string;
-          kategori: string;
-          perihal_default: string | null;
-          body_parts: Json;
-          lembaga_id: string | null;
-          is_active: boolean;
-          created_by: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          nama: string;
-          kategori: string;
-          perihal_default?: string | null;
-          body_parts?: Json;
-          lembaga_id?: string | null;
-          is_active?: boolean;
-          created_by?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          nama?: string;
-          kategori?: string;
-          perihal_default?: string | null;
-          body_parts?: Json;
-          lembaga_id?: string | null;
-          is_active?: boolean;
-          created_by?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "surat_templates_lembaga_id_fkey";
-            columns: ["lembaga_id"];
-            isOneToOne: false;
-            referencedRelation: "lembaga";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
-
-      surat_template_fields: {
-        Row: {
-          id: string;
-          template_id: string;
-          nama_field: string;
-          label: string;
-          tipe: string;
-          urutan: number;
-          required: boolean;
-          placeholder: string | null;
-          default_value: string | null;
-          options: Json | null;
-          section: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          template_id: string;
-          nama_field: string;
-          label: string;
-          tipe?: string;
-          urutan?: number;
-          required?: boolean;
-          placeholder?: string | null;
-          default_value?: string | null;
-          options?: Json | null;
-          section: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          template_id?: string;
-          nama_field?: string;
-          label?: string;
-          tipe?: string;
-          urutan?: number;
-          required?: boolean;
-          placeholder?: string | null;
-          default_value?: string | null;
-          options?: Json | null;
-          section?: string;
-          created_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "surat_template_fields_template_id_fkey";
-            columns: ["template_id"];
-            isOneToOne: false;
-            referencedRelation: "surat_templates";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
     };
     Views: {
       [_ in never]: never;
@@ -400,8 +292,6 @@ export interface Database {
           p_lampiran?: string;
           p_sifat?: string;
           p_created_by?: string;
-          p_template_id?: string;
-          p_template_data?: Json;
         };
         Returns: string;
       };

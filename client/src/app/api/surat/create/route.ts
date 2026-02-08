@@ -25,8 +25,6 @@ export async function POST(request: NextRequest) {
       sifat,
       tanggal_surat,
       tembusan,
-      template_id,
-      template_data,
     } = body;
 
     // Validate required fields
@@ -62,21 +60,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update template_id and template_data if using a template
-    if (template_id) {
-      const { error: templateError } = await supabase
-        .from("surat_keluar")
-        .update({
-          template_id,
-          template_data: template_data || null,
-        })
-        .eq("id", suratId);
-
-      if (templateError) {
-        console.error("Error updating template data:", templateError);
-      }
-    }
-
     // Insert tembusan (if any)
     if (tembusan && tembusan.length > 0) {
       const tembusanData = tembusan.map(
@@ -103,8 +86,7 @@ export async function POST(request: NextRequest) {
         `
         *,
         lembaga(*),
-        tembusan:surat_tembusan(*),
-        template:surat_templates(*, fields:surat_template_fields(*))
+        tembusan:surat_tembusan(*)
       `
       )
       .eq("id", suratId)

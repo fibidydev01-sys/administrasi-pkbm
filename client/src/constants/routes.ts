@@ -15,8 +15,5 @@ export const ROUTES = {
   ADMIN_LEMBAGA: "/admin/lembaga",
   ADMIN_PENGGUNA: "/admin/pengguna",
   ADMIN_PENGATURAN: "/admin/pengaturan",
-  ADMIN_TEMPLATE: "/admin/template",
-  ADMIN_TEMPLATE_BUAT: "/admin/template/buat",
-  ADMIN_TEMPLATE_EDIT: (id: string) => `/admin/template/${id}/edit`,
   PROFIL: "/profil",
 } as const;
